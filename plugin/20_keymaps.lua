@@ -19,6 +19,24 @@ end
 nmap('[p', '<Cmd>exe "put! " . v:register<CR>', 'Paste Above')
 nmap(']p', '<Cmd>exe "put "  . v:register<CR>', 'Paste Below')
 
+-- Clear search highlight (mini.basics also provides `\h` to toggle it)
+nmap('<Esc>', '<Cmd>nohlsearch<CR>', 'Clear search highlight')
+
+-- Save with Cmd+S (macOS)
+nmap('<D-s>', '<Cmd>w<CR>', 'Save file')
+
+-- Buffer navigation
+nmap('<Tab>', '<Cmd>bnext<CR>', 'Next buffer')
+nmap('<S-Tab>', '<Cmd>bprevious<CR>', 'Prev buffer')
+
+-- Keep visual selection active after indenting
+vim.keymap.set('v', '<', '<gv', { desc = 'Indent left (keep selection)' })
+vim.keymap.set('v', '>', '>gv', { desc = 'Indent right (keep selection)' })
+
+-- Quick alternative to `<Leader>ef` below: open 'mini.files' at current file
+-- and jump straight to its most recently focused entry.
+nmap('-', function() MiniFiles.open(vim.api.nvim_buf_get_name(0), true) end, 'Open mini.files')
+
 -- Many general mappings are created by 'mini.basics'. See 'plugin/30_mini.lua'
 
 -- stylua: ignore start
@@ -57,8 +75,8 @@ Config.leader_group_clues = {
   { mode = 'n', keys = '<Leader>l', desc = '+Language' },
   { mode = 'n', keys = '<Leader>m', desc = '+Map' },
   { mode = 'n', keys = '<Leader>o', desc = '+Other' },
-  { mode = 'n', keys = '<Leader>s', desc = '+Session' },
-  { mode = 'n', keys = '<Leader>t', desc = '+Terminal' },
+  { mode = 'n', keys = '<Leader>s', desc = '+Split' },
+  { mode = 'n', keys = '<Leader>t', desc = '+Tab' },
   { mode = 'n', keys = '<Leader>v', desc = '+Visits' },
 
   { mode = 'x', keys = '<Leader>g', desc = '+Git' },
@@ -86,11 +104,17 @@ local new_scratch_buffer = function()
 end
 
 nmap_leader('ba', '<Cmd>b#<CR>',                                 'Alternate')
-nmap_leader('bd', '<Cmd>lua MiniBufremove.delete()<CR>',         'Delete')
 nmap_leader('bD', '<Cmd>lua MiniBufremove.delete(0, true)<CR>',  'Delete!')
 nmap_leader('bs', new_scratch_buffer,                            'Scratch')
 nmap_leader('bw', '<Cmd>lua MiniBufremove.wipeout()<CR>',        'Wipeout')
 nmap_leader('bW', '<Cmd>lua MiniBufremove.wipeout(0, true)<CR>', 'Wipeout!')
+
+-- From LazyVim config. Uses the 'folke/snacks.nvim' 'bufdelete' module, set up in
+-- 'plugin/40_plugins.lua'. Replaces 'MiniBufremove.delete()' for plain delete
+-- ('bD'/'bw'/'bW' - force delete / wipeout - stay on 'mini.bufremove').
+nmap_leader('bd', function() Snacks.bufdelete() end,       'Delete buffer')
+nmap_leader('bo', function() Snacks.bufdelete.other() end, 'Delete other buffers')
+nmap_leader('bc', function() Snacks.bufdelete.all() end,   'Delete all buffers')
 
 -- e is for 'Explore' and 'Edit'. Common usage:
 -- - `<Leader>ed` - open explorer at current working directory
@@ -169,6 +193,7 @@ nmap_leader('gc', '<Cmd>Git commit<CR>',                    'Commit')
 nmap_leader('gC', '<Cmd>Git commit --amend<CR>',            'Commit amend')
 nmap_leader('gd', '<Cmd>Git diff<CR>',                      'Diff')
 nmap_leader('gD', '<Cmd>Git diff -- %<CR>',                 'Diff buffer')
+nmap_leader('gg', function() Snacks.lazygit() end,          'Lazygit')
 nmap_leader('gl', '<Cmd>' .. git_log_cmd .. '<CR>',         'Log')
 nmap_leader('gL', '<Cmd>' .. git_log_buf_cmd .. '<CR>',     'Log buffer')
 nmap_leader('go', '<Cmd>lua MiniDiff.toggle_overlay()<CR>', 'Toggle overlay')
@@ -212,20 +237,32 @@ nmap_leader('or', '<Cmd>lua MiniMisc.resize_window()<CR>', 'Resize to default wi
 nmap_leader('ot', '<Cmd>lua MiniTrailspace.trim()<CR>',    'Trim trailspace')
 nmap_leader('oz', '<Cmd>lua MiniMisc.zoom()<CR>',          'Zoom toggle')
 
--- s is for 'Session'. Common usage:
+-- s is for 'Split' (window). Ported from LazyVim config.
+--
+-- Previously this group was 'Session' (via 'mini.sessions', commented out below
+-- to free up 's' - re-add under a different key if/when needed).
 -- - `<Leader>sn` - start new session
 -- - `<Leader>sr` - read previously started session
 -- - `<Leader>sd` - delete previously started session
-local session_new = 'vim.ui.input({ prompt = "Session name: " }, MiniSessions.write)'
+-- local session_new = 'vim.ui.input({ prompt = "Session name: " }, MiniSessions.write)'
+-- nmap_leader('sd', '<Cmd>lua MiniSessions.select("delete")<CR>', 'Delete')
+-- nmap_leader('sn', '<Cmd>lua ' .. session_new .. '<CR>',         'New')
+-- nmap_leader('sr', '<Cmd>lua MiniSessions.select("read")<CR>',   'Read')
+-- nmap_leader('sw', '<Cmd>lua MiniSessions.write()<CR>',          'Write current')
 
-nmap_leader('sd', '<Cmd>lua MiniSessions.select("delete")<CR>', 'Delete')
-nmap_leader('sn', '<Cmd>lua ' .. session_new .. '<CR>',         'New')
-nmap_leader('sr', '<Cmd>lua MiniSessions.select("read")<CR>',   'Read')
-nmap_leader('sw', '<Cmd>lua MiniSessions.write()<CR>',          'Write current')
+nmap_leader('sv', '<C-w>v',         'Split window vertically')
+nmap_leader('sx', '<Cmd>close<CR>', 'Close current split')
 
--- t is for 'Terminal'
-nmap_leader('tT', '<Cmd>horizontal term<CR>', 'Terminal (horizontal)')
-nmap_leader('tt', '<Cmd>vertical term<CR>',   'Terminal (vertical)')
+-- t is for 'Tab'. Ported from LazyVim config.
+--
+-- Previously this group was 'Terminal' (built-in `:h :terminal`, commented out
+-- below - not used).
+-- nmap_leader('tT', '<Cmd>horizontal term<CR>', 'Terminal (horizontal)')
+-- nmap_leader('tt', '<Cmd>vertical term<CR>',   'Terminal (vertical)')
+
+nmap_leader('to', '<Cmd>tabnew<CR>',   'Open new tab')
+nmap_leader('tx', '<Cmd>tabclose<CR>', 'Close current tab')
+nmap_leader('tf', '<Cmd>tabnew %<CR>', 'Open current buffer in new tab')
 
 -- v is for 'Visits'. Common usage:
 -- - `<Leader>vv` - add    "core" label to current file.

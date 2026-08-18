@@ -462,7 +462,17 @@ later(function() require('mini.comment').setup() end)
 -- - `:h MiniDiff-overview` - overview of how module works
 -- - `:h MiniDiff-diff-summary` - available summary information
 -- - `:h MiniDiff.gen_source` - available built-in sources
-later(function() require('mini.diff').setup() end)
+-- NOTE: `view.style` is set explicitly to 'sign' (a glyph next to the line
+-- number). Left to auto-detect, its default is 'number' (colors the line
+-- number itself) whenever the 'number' option is on - which it is, in
+-- 'plugin/10_options.lua'.
+-- Also use a thin vertical bar (like 'gitsigns.nvim'/LazyVim's default) instead
+-- of the default '▒' block, which reads as visually bulkier.
+later(function()
+  require('mini.diff').setup({
+    view = { style = 'sign', signs = { add = '▎', change = '▎', delete = '▎' } },
+  })
+end)
 
 -- Git integration for more straightforward Git actions based on Neovim's state.
 -- It is not meant as a fully featured Git client, only to provide helpers that

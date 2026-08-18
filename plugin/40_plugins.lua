@@ -123,6 +123,32 @@ now_if_args(function()
   -- })
 end)
 
+-- Buffer deletion =============================================================
+
+-- Ported from LazyVim config. 'folke/snacks.nvim' provides several independent
+-- modules (enabled individually via the `setup()` table below):
+-- - `bufdelete` - delete buffer(s) without closing their window/split. Used by
+--   the '<Leader>bd' / '<Leader>bo' / '<Leader>bc' mappings below.
+-- - `lazygit` - open 'lazygit' in a floating terminal. Requires 'lazygit' to be
+--   installed separately. Used by the '<Leader>gg' mapping below.
+-- - `scroll` - smooth (animated) scrolling.
+-- - `statuscolumn` - custom statuscolumn combining line numbers, signs (e.g. from
+--   'mini.diff'), and folds. Replaces the plain 'number'/'signcolumn' rendering
+--   from 'plugin/10_options.lua'.
+--
+-- NOTE: `dashboard`, `notifier`, and `explorer`/`picker` modules were skipped -
+-- they overlap with 'mini.starter', 'mini.notify', and 'mini.files'/'mini.pick'
+-- respectively, which are already active in 'plugin/30_mini.lua'.
+later(function()
+  add('folke/snacks.nvim')
+  require('snacks').setup({
+    bufdelete = {},
+    lazygit = {},
+    scroll = {},
+    statuscolumn = {},
+  })
+end)
+
 -- Formatting =================================================================
 
 -- Programs dedicated to text formatting (a.k.a. formatters) are very useful.
