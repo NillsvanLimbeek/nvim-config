@@ -113,7 +113,9 @@ now(function() require('mini.sessions').setup() end)
 -- See also:
 -- - `:h MiniStarter-example-config` - non-default config examples
 -- - `:h MiniStarter-lifecycle` - how to work with Starter buffer
-now(function() require('mini.starter').setup() end)
+--
+-- Replaced by 'snacks.nvim' dashboard, set up in 'plugin/40_plugins.lua'.
+-- now(function() require('mini.starter').setup() end)
 
 -- Statusline. Sets `:h 'statusline'` to show more info in a line below window.
 -- Example usage:
@@ -706,7 +708,10 @@ end)
 -- - `:h MiniPick.builtin` and `:h MiniExtra.pickers` - available pickers;
 --   Execute one either with Lua function, `:Pick <picker-name>` command, or
 --   one of `<Leader>f` mappings defined in 'plugin/20_keymaps.lua'
-later(function() require('mini.pick').setup() end)
+--
+-- Replaced by 'snacks.nvim' picker + explorer, set up in 'plugin/40_plugins.lua'
+-- (it takes over `vim.ui.select()` too, via its `ui_select` default).
+-- later(function() require('mini.pick').setup() end)
 
 -- Manage and expand snippets (templates for a frequently used text).
 -- Typical workflow is to type snippet's (configurable) prefix and expand it

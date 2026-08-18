@@ -37,6 +37,10 @@ vim.keymap.set('v', '>', '>gv', { desc = 'Indent right (keep selection)' })
 -- and jump straight to its most recently focused entry.
 nmap('-', function() MiniFiles.open(vim.api.nvim_buf_get_name(0), true) end, 'Open mini.files')
 
+-- LSP goto actions (from 'folke/snacks.nvim' README defaults) are set up in
+-- 'plugin/40_plugins.lua' - has to come after 'mini.basics' (see
+-- 'plugin/30_mini.lua'), which sets a default 'gy' mapping this overrides.
+
 -- Many general mappings are created by 'mini.basics'. See 'plugin/30_mini.lua'
 
 -- stylua: ignore start
@@ -69,14 +73,14 @@ nmap('-', function() MiniFiles.open(vim.api.nvim_buf_get_name(0), true) end, 'Op
 -- Add an entry if you create a new group.
 Config.leader_group_clues = {
   { mode = 'n', keys = '<Leader>b', desc = '+Buffer' },
-  { mode = 'n', keys = '<Leader>e', desc = '+Explore/Edit' },
   { mode = 'n', keys = '<Leader>f', desc = '+Find' },
   { mode = 'n', keys = '<Leader>g', desc = '+Git' },
   { mode = 'n', keys = '<Leader>l', desc = '+Language' },
   { mode = 'n', keys = '<Leader>m', desc = '+Map' },
   { mode = 'n', keys = '<Leader>o', desc = '+Other' },
-  { mode = 'n', keys = '<Leader>s', desc = '+Split' },
+  { mode = 'n', keys = '<Leader>s', desc = '+Split/Search' },
   { mode = 'n', keys = '<Leader>t', desc = '+Tab' },
+  { mode = 'n', keys = '<Leader>u', desc = '+UI' },
   { mode = 'n', keys = '<Leader>v', desc = '+Visits' },
 
   { mode = 'x', keys = '<Leader>g', desc = '+Git' },
@@ -116,90 +120,66 @@ nmap_leader('bd', function() Snacks.bufdelete() end,       'Delete buffer')
 nmap_leader('bo', function() Snacks.bufdelete.other() end, 'Delete other buffers')
 nmap_leader('bc', function() Snacks.bufdelete.all() end,   'Delete all buffers')
 
--- e is for 'Explore' and 'Edit'. Common usage:
--- - `<Leader>ed` - open explorer at current working directory
--- - `<Leader>ef` - open directory of current file (needs to be present on disk)
--- - `<Leader>ei` - edit 'init.lua'
--- - All mappings that use `edit_plugin_file` - edit 'plugin/' config files
-local edit_plugin_file = function(filename)
-  return string.format('<Cmd>edit %s/plugin/%s<CR>', vim.fn.stdpath('config'), filename)
-end
-local explore_at_file = '<Cmd>lua MiniFiles.open(vim.api.nvim_buf_get_name(0))<CR>'
-local explore_quickfix = function()
-  vim.cmd(vim.fn.getqflist({ winid = true }).winid ~= 0 and 'cclose' or 'copen')
-end
-local explore_locations = function()
-  vim.cmd(vim.fn.getloclist(0, { winid = true }).winid ~= 0 and 'lclose' or 'lopen')
-end
-
-nmap_leader('ed', '<Cmd>lua MiniFiles.open()<CR>',          'Directory')
-nmap_leader('ef', explore_at_file,                          'File directory')
-nmap_leader('ei', '<Cmd>edit $MYVIMRC<CR>',                 'init.lua')
-nmap_leader('ek', edit_plugin_file('20_keymaps.lua'),       'Keymaps config')
-nmap_leader('em', edit_plugin_file('30_mini.lua'),          'MINI config')
-nmap_leader('en', '<Cmd>lua MiniNotify.show_history()<CR>', 'Notifications')
-nmap_leader('eo', edit_plugin_file('10_options.lua'),       'Options config')
-nmap_leader('ep', edit_plugin_file('40_plugins.lua'),       'Plugins config')
-nmap_leader('eq', explore_quickfix,                         'Quickfix list')
-nmap_leader('eQ', explore_locations,                        'Location list')
+-- Top-level single-key mappings (from LazyVim/Snacks README defaults). Uses
+-- 'folke/snacks.nvim' picker + explorer, set up in 'plugin/40_plugins.lua'.
+-- Replaces the previous 'e' (Explore/Edit) group entirely, and most of the
+-- 'f' (Find) group below - both used to be 'mini.pick'-based (now disabled,
+-- see 'plugin/30_mini.lua'). 'mini.files' is still available via '-' above.
+nmap_leader('<Space>', function() Snacks.picker.smart() end,           'Smart find files')
+nmap_leader(',',       function() Snacks.picker.buffers() end,         'Buffers')
+nmap_leader('/',       function() Snacks.picker.grep() end,            'Grep')
+nmap_leader(':',       function() Snacks.picker.command_history() end, 'Command history')
+nmap_leader('e',       function() Snacks.explorer() end,               'Explorer')
 
 -- f is for 'Fuzzy Find'. Common usage:
 -- - `<Leader>ff` - find files; for best performance requires `ripgrep`
--- - `<Leader>fg` - find inside files; requires `ripgrep`
--- - `<Leader>fh` - find help tag
--- - `<Leader>fr` - resume latest picker
--- - `<Leader>fv` - all visited paths; requires 'mini.visits'
+-- - `<Leader>fr` - recent files
 --
--- All these use 'mini.pick'. See `:h MiniPick-overview` for an overview.
-local pick_added_hunks_buf = '<Cmd>Pick git_hunks path="%" scope="staged"<CR>'
-local pick_workspace_symbols_live = '<Cmd>Pick lsp scope="workspace_symbol_live"<CR>'
-
-nmap_leader('f/', '<Cmd>Pick history scope="/"<CR>',            '"/" history')
-nmap_leader('f:', '<Cmd>Pick history scope=":"<CR>',            '":" history')
-nmap_leader('fa', '<Cmd>Pick git_hunks scope="staged"<CR>',     'Added hunks (all)')
-nmap_leader('fA', pick_added_hunks_buf,                         'Added hunks (buf)')
-nmap_leader('fb', '<Cmd>Pick buffers<CR>',                      'Buffers')
-nmap_leader('fc', '<Cmd>Pick git_commits<CR>',                  'Commits (all)')
-nmap_leader('fC', '<Cmd>Pick git_commits path="%"<CR>',         'Commits (buf)')
-nmap_leader('fd', '<Cmd>Pick diagnostic scope="all"<CR>',       'Diagnostic workspace')
-nmap_leader('fD', '<Cmd>Pick diagnostic scope="current"<CR>',   'Diagnostic buffer')
-nmap_leader('ff', '<Cmd>Pick files<CR>',                        'Files')
-nmap_leader('fg', '<Cmd>Pick grep_live<CR>',                    'Grep live')
-nmap_leader('fG', '<Cmd>Pick grep pattern="<cword>"<CR>',       'Grep current word')
-nmap_leader('fh', '<Cmd>Pick help<CR>',                         'Help tags')
-nmap_leader('fH', '<Cmd>Pick hl_groups<CR>',                    'Highlight groups')
-nmap_leader('fl', '<Cmd>Pick buf_lines scope="all"<CR>',        'Lines (all)')
-nmap_leader('fL', '<Cmd>Pick buf_lines scope="current"<CR>',    'Lines (buf)')
-nmap_leader('fm', '<Cmd>Pick git_hunks<CR>',                    'Modified hunks (all)')
-nmap_leader('fM', '<Cmd>Pick git_hunks path="%"<CR>',           'Modified hunks (buf)')
-nmap_leader('fr', '<Cmd>Pick resume<CR>',                       'Resume')
-nmap_leader('fR', '<Cmd>Pick lsp scope="references"<CR>',       'References (LSP)')
-nmap_leader('fs', pick_workspace_symbols_live,                  'Symbols workspace (live)')
-nmap_leader('fS', '<Cmd>Pick lsp scope="document_symbol"<CR>',  'Symbols document')
-nmap_leader('fv', '<Cmd>Pick visit_paths cwd=""<CR>',           'Visit paths (all)')
-nmap_leader('fV', '<Cmd>Pick visit_paths<CR>',                  'Visit paths (cwd)')
+-- The rest of the previous, larger 'mini.pick'-based group moved to the 's'
+-- (Search) group and bare `g*`/`gr` LSP mappings above, matching Snacks'
+-- own README default keymaps.
+nmap_leader('fb', function() Snacks.picker.buffers() end,                                 'Buffers')
+nmap_leader('fc', function() Snacks.picker.files({ cwd = vim.fn.stdpath('config') }) end, 'Find config file')
+nmap_leader('ff', function() Snacks.picker.files() end,                                   'Find files')
+nmap_leader('fg', function() Snacks.picker.git_files() end,                               'Find git files')
+nmap_leader('fp', function() Snacks.picker.projects() end,                                'Projects')
+nmap_leader('fr', function() Snacks.picker.recent() end,                                  'Recent files')
 
 -- g is for 'Git'. Common usage:
--- - `<Leader>gs` - show information at cursor
+-- - `<Leader>gs` - Git status picker
 -- - `<Leader>go` - toggle 'mini.diff' overlay to show in-buffer unstaged changes
--- - `<Leader>gd` - show unstaged changes as a patch in separate tabpage
--- - `<Leader>gL` - show Git log of current file
+-- - `<Leader>gd` - Git diff (hunks) picker
+-- - `<Leader>gg` - open 'lazygit'
+--
+-- Git pickers ('gb'/'gd'/'gf'/'gl'/'gL'/'gs'/'gS') use 'folke/snacks.nvim',
+-- set up in 'plugin/40_plugins.lua', matching its README default keymaps.
+-- This took over the 'gd'/'gD' (Diff/Diff buffer), 'gl'/'gL' (Log/Log buffer),
+-- and 'gs' (Show at cursor) keys previously used for 'mini.git'/custom `:Git`
+-- commands - moved to 'gw'/'gW' (Working diff), 'gh'/'gH' (Log, text), and
+-- 'gI' (Info) below.
 local git_log_cmd = [[Git log --pretty=format:\%h\ \%as\ │\ \%s --topo-order]]
 local git_log_buf_cmd = git_log_cmd .. ' --follow -- %'
 
-nmap_leader('ga', '<Cmd>Git diff --cached<CR>',             'Added diff')
-nmap_leader('gA', '<Cmd>Git diff --cached -- %<CR>',        'Added diff buffer')
-nmap_leader('gc', '<Cmd>Git commit<CR>',                    'Commit')
-nmap_leader('gC', '<Cmd>Git commit --amend<CR>',            'Commit amend')
-nmap_leader('gd', '<Cmd>Git diff<CR>',                      'Diff')
-nmap_leader('gD', '<Cmd>Git diff -- %<CR>',                 'Diff buffer')
-nmap_leader('gg', function() Snacks.lazygit() end,          'Lazygit')
-nmap_leader('gl', '<Cmd>' .. git_log_cmd .. '<CR>',         'Log')
-nmap_leader('gL', '<Cmd>' .. git_log_buf_cmd .. '<CR>',     'Log buffer')
-nmap_leader('go', '<Cmd>lua MiniDiff.toggle_overlay()<CR>', 'Toggle overlay')
-nmap_leader('gs', '<Cmd>lua MiniGit.show_at_cursor()<CR>',  'Show at cursor')
+nmap_leader('ga', '<Cmd>Git diff --cached<CR>',                 'Added diff')
+nmap_leader('gA', '<Cmd>Git diff --cached -- %<CR>',            'Added diff buffer')
+nmap_leader('gb', function() Snacks.picker.git_branches() end,  'Branches')
+nmap_leader('gc', '<Cmd>Git commit<CR>',                        'Commit')
+nmap_leader('gC', '<Cmd>Git commit --amend<CR>',                'Commit amend')
+nmap_leader('gd', function() Snacks.picker.git_diff() end,      'Diff (hunks)')
+nmap_leader('gf', function() Snacks.picker.git_log_file() end,  'Log file')
+nmap_leader('gg', function() Snacks.lazygit() end,              'Lazygit')
+nmap_leader('gh', '<Cmd>' .. git_log_cmd .. '<CR>',             'Log (text)')
+nmap_leader('gH', '<Cmd>' .. git_log_buf_cmd .. '<CR>',         'Log buffer (text)')
+nmap_leader('gI', '<Cmd>lua MiniGit.show_at_cursor()<CR>',      'Info at cursor')
+nmap_leader('gl', function() Snacks.picker.git_log() end,       'Log')
+nmap_leader('gL', function() Snacks.picker.git_log_line() end,  'Log line')
+nmap_leader('go', '<Cmd>lua MiniDiff.toggle_overlay()<CR>',     'Toggle overlay')
+nmap_leader('gs', function() Snacks.picker.git_status() end,    'Status')
+nmap_leader('gS', function() Snacks.picker.git_stash() end,     'Stash')
+nmap_leader('gw', '<Cmd>Git diff<CR>',                          'Working diff')
+nmap_leader('gW', '<Cmd>Git diff -- %<CR>',                     'Working diff buffer')
 
-xmap_leader('gs', '<Cmd>lua MiniGit.show_at_cursor()<CR>', 'Show at selection')
+xmap_leader('gI', '<Cmd>lua MiniGit.show_at_cursor()<CR>', 'Info at selection')
 
 -- l is for 'Language'. Common usage:
 -- - `<Leader>ld` - show more diagnostic details in a floating window
@@ -253,6 +233,39 @@ nmap_leader('oz', '<Cmd>lua MiniMisc.zoom()<CR>',          'Zoom toggle')
 nmap_leader('sv', '<C-w>v',         'Split window vertically')
 nmap_leader('sx', '<Cmd>close<CR>', 'Close current split')
 
+-- Search pickers (from LazyVim/Snacks README defaults). Uses 'folke/snacks.nvim'
+-- picker, set up in 'plugin/40_plugins.lua'.
+--
+-- NOTE: 'sp' (Search for Plugin Spec, via `Snacks.picker.lazy()`) skipped - it
+-- reads 'lazy.nvim' plugin specs, which don't exist here (MiniMax uses
+-- 'mini.deps' instead).
+nmap_leader('s"', function() Snacks.picker.registers() end,            'Registers')
+nmap_leader('s/', function() Snacks.picker.search_history() end,       'Search history')
+nmap_leader('sa', function() Snacks.picker.autocmds() end,             'Autocmds')
+nmap_leader('sb', function() Snacks.picker.lines() end,                'Buffer lines')
+nmap_leader('sB', function() Snacks.picker.grep_buffers() end,         'Grep open buffers')
+nmap_leader('sc', function() Snacks.picker.command_history() end,      'Command history')
+nmap_leader('sC', function() Snacks.picker.commands() end,             'Commands')
+nmap_leader('sd', function() Snacks.picker.diagnostics() end,          'Diagnostics')
+nmap_leader('sD', function() Snacks.picker.diagnostics_buffer() end,   'Buffer diagnostics')
+nmap_leader('sg', function() Snacks.picker.grep() end,                 'Grep')
+nmap_leader('sh', function() Snacks.picker.help() end,                 'Help pages')
+nmap_leader('sH', function() Snacks.picker.highlights() end,           'Highlights')
+nmap_leader('si', function() Snacks.picker.icons() end,                'Icons')
+nmap_leader('sj', function() Snacks.picker.jumps() end,                'Jumps')
+nmap_leader('sk', function() Snacks.picker.keymaps() end,              'Keymaps')
+nmap_leader('sl', function() Snacks.picker.loclist() end,              'Location list')
+nmap_leader('sm', function() Snacks.picker.marks() end,                'Marks')
+nmap_leader('sM', function() Snacks.picker.man() end,                  'Man pages')
+nmap_leader('sq', function() Snacks.picker.qflist() end,               'Quickfix list')
+nmap_leader('sR', function() Snacks.picker.resume() end,               'Resume')
+nmap_leader('ss', function() Snacks.picker.lsp_symbols() end,          'LSP symbols')
+nmap_leader('sS', function() Snacks.picker.lsp_workspace_symbols() end,'LSP workspace symbols')
+nmap_leader('su', function() Snacks.picker.undo() end,                 'Undo history')
+nmap_leader('sw', function() Snacks.picker.grep_word() end,            'Word/selection')
+
+xmap_leader('sw', function() Snacks.picker.grep_word() end, 'Word/selection')
+
 -- t is for 'Tab'. Ported from LazyVim config.
 --
 -- Previously this group was 'Terminal' (built-in `:h :terminal`, commented out
@@ -264,20 +277,17 @@ nmap_leader('to', '<Cmd>tabnew<CR>',   'Open new tab')
 nmap_leader('tx', '<Cmd>tabclose<CR>', 'Close current tab')
 nmap_leader('tf', '<Cmd>tabnew %<CR>', 'Open current buffer in new tab')
 
+-- u is for 'UI'. From LazyVim/Snacks README defaults.
+nmap_leader('uC', function() Snacks.picker.colorschemes() end, 'Colorschemes')
+
 -- v is for 'Visits'. Common usage:
 -- - `<Leader>vv` - add    "core" label to current file.
 -- - `<Leader>vV` - remove "core" label to current file.
--- - `<Leader>vc` - pick among all files with "core" label.
-local make_pick_core = function(cwd, desc)
-  return function()
-    local sort_latest = MiniVisits.gen_sort.default({ recency_weight = 1 })
-    local local_opts = { cwd = cwd, filter = 'core', sort = sort_latest }
-    MiniExtra.pickers.visit_paths(local_opts, { source = { name = desc } })
-  end
-end
-
-nmap_leader('vc', make_pick_core('',  'Core visits (all)'),       'Core visits (all)')
-nmap_leader('vC', make_pick_core(nil, 'Core visits (cwd)'),       'Core visits (cwd)')
+--
+-- NOTE: previously included 'vc'/'vC' pickers over "core"-labeled files, via
+-- `MiniExtra.pickers.visit_paths()`. Dropped along with 'mini.pick' (see
+-- 'plugin/30_mini.lua'), which they needed as a rendering backend and has no
+-- Snacks equivalent for 'mini.visits'' label tracking.
 nmap_leader('vv', '<Cmd>lua MiniVisits.add_label("core")<CR>',    'Add "core" label')
 nmap_leader('vV', '<Cmd>lua MiniVisits.remove_label("core")<CR>', 'Remove "core" label')
 nmap_leader('vl', '<Cmd>lua MiniVisits.add_label()<CR>',          'Add label')
