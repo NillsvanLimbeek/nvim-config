@@ -9,8 +9,19 @@
 -- Use this file to install and configure other such plugins.
 
 -- Make concise helpers for installing/adding plugins in two stages
-local add, later = MiniDeps.add, MiniDeps.later
+local add, now, later = MiniDeps.add, MiniDeps.now, MiniDeps.later
 local now_if_args = Config.now_if_args
+
+-- Color scheme ================================================================
+
+-- 'catppuccin/nvim' provides the Catppuccin color scheme. Set up now (not later)
+-- so it applies before first screen draw, replacing 'miniwinter' from
+-- 'plugin/30_mini.lua'.
+now(function()
+  add('catppuccin/nvim')
+  require('catppuccin').setup({ flavour = 'mocha', transparent_background = true })
+  vim.cmd.colorscheme('catppuccin')
+end)
 
 -- Tree-sitter ================================================================
 
