@@ -236,6 +236,39 @@ vim.keymap.set('n', 'gy', function() Snacks.picker.lsp_type_definitions() end, {
 vim.keymap.set('n', 'gai', function() Snacks.picker.lsp_incoming_calls() end, { desc = 'Calls incoming' })
 vim.keymap.set('n', 'gao', function() Snacks.picker.lsp_outgoing_calls() end, { desc = 'Calls outgoing' })
 
+-- Command line UI =============================================================
+
+-- 'folke/noice.nvim' can move the command line (and its completion popup menu)
+-- into a floating window centered in the UI - `ext_cmdline`, a Neovim UI
+-- extension that nothing in MINI or 'snacks.nvim' implements.
+--
+-- Message/notification handling and LSP progress are left disabled - same
+-- call made for 'snacks.nvim's own `notifier` module above - 'mini.notify'
+-- (see 'plugin/30_mini.lua') keeps handling those. LSP hover/signature-help
+-- (e.g. 'K') are kept on Noice's defaults on purpose: nicer (Treesitter-based)
+-- markdown rendering than Neovim's plain 'vim.lsp.buf.hover()' float, and
+-- nothing else in this config touches them.
+later(function()
+  add({ source = 'folke/noice.nvim', depends = { 'MunifTanjim/nui.nvim' } })
+
+  -- With the cmdline moved into a floating window, the classic bottom row(s)
+  -- reserved for it (`:h 'cmdheight'`) are no longer needed and would just
+  -- show as an empty gap below the statusline.
+  vim.o.cmdheight = 0
+
+  require('noice').setup({
+    cmdline = { view = 'cmdline_popup' },
+    popupmenu = { enabled = true, backend = 'nui' },
+    messages = { enabled = false },
+    notify = { enabled = false },
+    lsp = { progress = { enabled = false } },
+    presets = {
+      command_palette = true, -- position the cmdline and popupmenu together
+      bottom_search = true, -- classic bottom cmdline for search
+    },
+  })
+end)
+
 -- Formatting =================================================================
 
 -- Programs dedicated to text formatting (a.k.a. formatters) are very useful.
