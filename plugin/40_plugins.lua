@@ -114,13 +114,72 @@ end)
 now_if_args(function()
   add('neovim/nvim-lspconfig')
 
+  -- 'folke/lazydev.nvim' teaches 'lua_ls' about things it can't infer on its
+  -- own from `$VIMRUNTIME` alone: globals injected by plugins at runtime
+  -- (like `Snacks`) and `vim.uv` (libuv) typings - without the slow, noisy
+  -- full-'runtimepath' library scan the 'lua_ls' snippet below explicitly
+  -- avoids. Only activates for files under this config / installed plugin
+  -- directories, not Lua files in general.
+  --
+  -- NOTE: doesn't cover 'mini.nvim's own `MiniXxx` globals (e.g. `MiniDeps`,
+  -- `MiniFiles`) - unlike 'snacks.nvim', they're assigned to `_G` from inside
+  -- a function body (`_G.MiniDeps = MiniDeps` in 'mini/deps.lua'), not via
+  -- a top-level `---@type`-annotated declaration lazydev's scanner can pick
+  -- up. Listed explicitly in `diagnostics.globals` below instead.
+  add('folke/lazydev.nvim')
+  require('lazydev').setup({
+    library = {
+      { path = '${3rd}/luv/library', words = { 'vim%.uv' } },
+    },
+  })
+
+  -- 'lua_ls' config below is 'nvim-lspconfig's own suggested snippet (see its
+  -- doc comment in 'lsp/lua_ls.lua') for using it primarily to edit a Neovim
+  -- config: makes it aware of the Neovim runtime (`vim` global, `:h lua-guide`
+  -- APIs, etc.) instead of flagging them as undefined, without pulling in all
+  -- of 'runtimepath' (slow, and noisy on this config's own files - see the
+  -- linked issue in that same doc comment).
+  vim.lsp.config('lua_ls', {
+    on_init = function(client)
+      if client.workspace_folders then
+        local path = client.workspace_folders[1].name
+        if
+          path ~= vim.fn.stdpath('config')
+          and (vim.uv.fs_stat(path .. '/.luarc.json') or vim.uv.fs_stat(path .. '/.luarc.jsonc'))
+        then
+          return
+        end
+      end
+
+      client.config.settings.Lua = vim.tbl_deep_extend('force', client.config.settings.Lua, {
+        runtime = { version = 'LuaJIT', path = { 'lua/?.lua', 'lua/?/init.lua' } },
+        workspace = {
+          checkThirdParty = false,
+          library = {
+            vim.env.VIMRUNTIME,
+            vim.api.nvim_get_runtime_file('lua/lspconfig', false)[1],
+          },
+        },
+        -- 'mini.nvim' module globals used (as bare 'MiniXxx.func()') across
+        -- this config's 'plugin/*.lua' files - see NOTE above 'lazydev.setup()'.
+        diagnostics = {
+          globals = {
+            'MiniAi', 'MiniAlign', 'MiniBasics', 'MiniBufremove', 'MiniClue',
+            'MiniColors', 'MiniCompletion', 'MiniDeps', 'MiniDiff', 'MiniExtra',
+            'MiniFiles', 'MiniGit', 'MiniIcons', 'MiniIndentscope', 'MiniInput',
+            'MiniKeymap', 'MiniMap', 'MiniMisc', 'MiniNotify', 'MiniPick',
+            'MiniSessions', 'MiniSnippets', 'MiniSplitjoin', 'MiniTrailspace',
+            'MiniVisits',
+          },
+        },
+      })
+    end,
+  })
+
   -- Use `:h vim.lsp.enable()` to automatically enable language server based on
   -- the rules provided by 'nvim-lspconfig'.
   -- Use `:h vim.lsp.config()` or 'after/lsp/' directory to configure servers.
-  -- Uncomment and tweak the following `vim.lsp.enable()` call to enable servers.
-  -- vim.lsp.enable({
-  --   -- For example, if `lua-language-server` is installed, use `'lua_ls'` entry
-  -- })
+  vim.lsp.enable({ 'lua_ls' })
 end)
 
 -- Buffer deletion =============================================================
@@ -306,7 +365,7 @@ end)
 -- See `:h MiniSnippets.gen_loader.from_lang()`.
 later(function() add('rafamadriz/friendly-snippets') end)
 
--- Honorable mentions =========================================================
+-- Package manager for language servers ========================================
 
 -- 'mason-org/mason.nvim' (a.k.a. "Mason") is a great tool (package manager) for
 -- installing external language servers, formatters, and linters. It provides
@@ -315,11 +374,14 @@ later(function() add('rafamadriz/friendly-snippets') end)
 -- The caveat is that these programs will be set up to be mostly used inside Neovim.
 -- If you need them to work elsewhere, consider using other package managers.
 --
--- You can use it like so:
--- now_if_args(function()
---   add('mason-org/mason.nvim')
---   require('mason').setup()
--- end)
+-- None of the servers referenced above (see 'Language servers' section) are
+-- installed system-wide, so install them with `:Mason` / `:MasonInstall`.
+now_if_args(function()
+  add('mason-org/mason.nvim')
+  require('mason').setup()
+end)
+
+-- Honorable mentions =========================================================
 
 -- Beautiful, usable, well maintained color schemes outside of 'mini.nvim' and
 -- have full support of its highlight groups. Use if you don't like 'miniwinter'
