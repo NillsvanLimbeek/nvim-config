@@ -325,6 +325,16 @@ later(function()
       command_palette = true, -- position the cmdline and popupmenu together
       bottom_search = true, -- classic bottom cmdline for search
     },
+    -- The 'hover' view (LSP hover, e.g. 'K') has no border by default.
+    -- NOTE: `position.row` bumped from the default `1` to `2` - with a border
+    -- added, the default renders the popup's top row on the *same* screen row
+    -- as the cursor, covering the inspected keyword instead of appearing below it.
+    views = {
+      hover = {
+        border = { style = 'rounded' },
+        position = { row = 2, col = 0 },
+      },
+    },
   })
 end)
 
