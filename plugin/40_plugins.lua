@@ -209,6 +209,18 @@ now(function()
   })
 end)
 
+-- 'mini.completion' (see 'plugin/30_mini.lua') doesn't know about the picker's
+-- input buffer and would otherwise show its own keyword-completion dropdown
+-- (sourced from words in other open buffers) while typing a query. It already
+-- special-cases 'TelescopePrompt' this same way by default - add the same for
+-- 'snacks.nvim'.
+Config.new_autocmd(
+  'FileType',
+  'snacks_picker_input',
+  function() vim.b.minicompletion_disable = true end,
+  'Disable mini.completion in the picker input'
+)
+
 -- LSP goto actions (from 'folke/snacks.nvim' README defaults). Uses the picker
 -- for a list when there are multiple results.
 --
