@@ -19,7 +19,24 @@ local now_if_args = Config.now_if_args
 -- 'plugin/30_mini.lua'.
 now(function()
   add('catppuccin/nvim')
-  require('catppuccin').setup({ flavour = 'mocha', transparent_background = true })
+  require('catppuccin').setup({
+    flavour = 'mocha',
+    transparent_background = true,
+    -- Give the selected item in popup menus (completion, etc.) more contrast
+    -- than the default 'surface0', matching blink.cmp's selection highlight.
+    custom_highlights = function(colors)
+      return {
+        PmenuSel = { bg = colors.surface1, style = { 'bold' } },
+        PmenuKindSel = { bg = colors.surface1, fg = colors.blue, style = { 'bold' } },
+        PmenuExtraSel = { bg = colors.surface1, fg = colors.overlay0, style = { 'bold' } },
+        -- With 'transparent_background = true', Pmenu's background would
+        -- otherwise be see-through - force it solid so the completion popup
+        -- (which now has a border) doesn't look like a hole in the editor.
+        Pmenu = { bg = colors.mantle },
+        PmenuKind = { bg = colors.mantle },
+      }
+    end,
+  })
   vim.cmd.colorscheme('catppuccin')
 end)
 
@@ -95,6 +112,76 @@ now_if_args(function()
   end
   local ts_start = function(ev) vim.treesitter.start(ev.buf) end
   Config.new_autocmd('FileType', filetypes, ts_start, 'Start tree-sitter')
+end)
+
+-- Completion ==================================================================
+
+-- 'saghen/blink.cmp' replaces 'mini.completion' (disabled in 'plugin/30_mini.lua')
+-- as the completion engine: LSP + path + buffer sources and its own popup menu.
+-- `<Tab>` / `<S-Tab>` navigate the menu (or jump forward/backward through
+-- snippet placeholders when it isn't open) and `<CR>` accepts - see the
+-- `keymap` table below for why that needs overriding the 'default' preset.
+-- Registers its own `<Tab>` / `<S-Tab>` / `<CR>` insert-mode mappings, which -
+-- since this section runs before 'mini.keymap's in 'plugin/30_mini.lua' -
+-- take priority over the 'pmenu_*' multistep ones there whenever blink's menu
+-- is visible. Signature help is left to 'noice.nvim' (see its "Command line
+-- UI" section below) rather than blink's own - see the `signature` field.
+--
+-- Snippet *expansion* is still handled by 'mini.snippets' (set up in
+-- 'plugin/30_mini.lua', which already depends on 'rafamadriz/friendly-snippets')
+-- via the 'mini_snippets' preset below, rather than blink's own snippet engine.
+--
+-- Placed before "Language servers" below so `vim.lsp.config('*', ...)` registers
+-- blink's LSP capabilities before any server gets enabled/attached.
+--
+-- NOTE: fuzzy matching uses a native Rust module, built from source on install/
+-- update via the 'post_checkout' hook below - requires a working 'cargo'.
+now_if_args(function()
+  add({
+    source = 'saghen/blink.cmp',
+    checkout = 'v1.10.2',
+    hooks = {
+      post_checkout = function(args) vim.system({ 'cargo', 'build', '--release' }, { cwd = args.path }):wait() end,
+    },
+  })
+
+  require('blink.cmp').setup({
+    -- The 'super-tab' preset makes `<Tab>` *accept* the selected item
+    -- (VSCode-style). Override it here to instead just navigate the menu -
+    -- matching 'mini.completion's old `<Tab>` / `<S-Tab>` behavior - and
+    -- accept on `<CR>` instead. `'fallback'` runs whatever `<CR>` would've
+    -- done otherwise (i.e. 'mini.keymap's 'minipairs_cr' step) when the menu
+    -- isn't visible.
+    keymap = {
+      preset = 'default',
+      ['<Tab>'] = { 'select_next', 'snippet_forward', 'fallback' },
+      ['<S-Tab>'] = { 'select_prev', 'snippet_backward', 'fallback' },
+      ['<CR>'] = { 'accept', 'fallback' },
+    },
+    sources = { default = { 'lsp', 'path', 'snippets', 'buffer' } },
+    snippets = { preset = 'mini_snippets' },
+    completion = {
+      menu = { border = 'rounded' },
+      documentation = { auto_show = true, window = { border = 'rounded' } },
+      -- Disabled: accepting a function completion (e.g. 'console.log') would
+      -- auto-insert '()' as a snippet with an empty tabstop inside, silently
+      -- starting a 'mini.snippets' session every time - its `•`/`∎` empty-
+      -- tabstop markers (see 'plugin/30_mini.lua') then linger at the cursor
+      -- until that session is explicitly ended (`<C-c>` or jumping past it).
+      -- 'mini.pairs' already closes brackets when typed manually, so this
+      -- isn't needed.
+      accept = { auto_brackets = { enabled = false } },
+    },
+    -- Left disabled (blink's own default): 'noice.nvim' (see 'plugin/40_plugins.lua'
+    -- below, "Command line UI" section) already shows LSP signature help on its
+    -- own by default, with nicer Treesitter-based markdown rendering. Enabling
+    -- it here too just overlaps blink's plainer signature window on top of it.
+    signature = { enabled = false },
+  })
+
+  -- Advertise to servers that Neovim now supports certain set of completion and
+  -- signature features through 'blink.cmp'.
+  vim.lsp.config('*', { capabilities = require('blink.cmp').get_lsp_capabilities() })
 end)
 
 -- Language servers ===========================================================
@@ -498,10 +585,20 @@ later(function()
     -- NOTE: `position.row` bumped from the default `1` to `2` - with a border
     -- added, the default renders the popup's top row on the *same* screen row
     -- as the cursor, covering the inspected keyword instead of appearing below it.
+    --
+    -- 'popupmenu' is the insert-mode completion menu - now only used as a
+    -- fallback for native Vim completion (e.g. manual `<C-n>`/`<C-x><C-f>`),
+    -- since 'blink.cmp' (see "Completion" section above) draws its own menu
+    -- instead of going through this. Still has no border by default; row
+    -- offset to avoid covering the cursor is handled automatically once a
+    -- border is set (unlike 'hover' above).
     views = {
       hover = {
         border = { style = 'rounded' },
         position = { row = 2, col = 0 },
+      },
+      popupmenu = {
+        border = { style = 'rounded' },
       },
     },
   })

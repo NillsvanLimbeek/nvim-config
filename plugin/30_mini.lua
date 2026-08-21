@@ -84,7 +84,7 @@ now(function()
   -- Not needed for 'mini.nvim' or MiniMax, but might be useful for others.
   later(MiniIcons.mock_nvim_web_devicons)
 
-  -- Add LSP kind icons. Useful for 'mini.completion'.
+  -- Add LSP kind icons. Useful for completion UIs (e.g. 'blink.cmp').
   later(MiniIcons.tweak_lsp_kind)
 end)
 
@@ -138,61 +138,11 @@ now(function() require('mini.tabline').setup() end)
 -- Load now if Neovim is started like `nvim -- path/to/file`, otherwise - later.
 -- This ensures a correct behavior for files opened during startup.
 
--- Completion and signature help. Implements async "two stage" autocompletion:
--- - Based on attached LSP servers that support completion.
--- - Fallback (based on built-in keyword completion) if there is no LSP candidates.
---
--- Example usage in Insert mode with attached LSP:
--- - Start typing text that should be recognized by LSP (like variable name).
--- - After 100ms a popup menu with candidates appears.
--- - Press `<Tab>` / `<S-Tab>` to navigate down/up the list. These are set up
---   in 'mini.keymap'. You can also use `<C-n>` / `<C-p>`.
--- - During navigation there is an info window to the right showing extra info
---   that the LSP server can provide about the candidate. It appears after the
---   candidate stays selected for 100ms. Use `<C-f>` / `<C-b>` to scroll it.
--- - Navigating to an entry also changes buffer text. If you are happy with it,
---   keep typing after it. To discard completion completely, press `<C-e>`.
--- - After pressing special trigger(s), usually `(`, a window appears that shows
---   the signature of the current function/method. It gets updated as you type
---   showing the currently active parameter.
---
--- Example usage in Insert mode without an attached LSP or in places not
--- supported by the LSP (like comments):
--- - Start typing a word that is present in current or opened buffers.
--- - After 100ms popup menu with candidates appears.
--- - Navigate with `<Tab>` / `<S-Tab>` or `<C-n>` / `<C-p>`. This also updates
---   buffer text. If happy with choice, keep typing. Stop with `<C-e>`.
---
--- It also works with snippet candidates provided by LSP server. Best experience
--- when paired with 'mini.snippets' (which is set up in this file).
-now_if_args(function()
-  -- Customize post-processing of LSP responses for a better user experience.
-  -- Don't show 'Text' suggestions (usually noisy) and show snippets last.
-  local process_items_opts = { kind_priority = { Text = -1, Snippet = 99 } }
-  local process_items = function(items, base)
-    return MiniCompletion.default_process_items(items, base, process_items_opts)
-  end
-  require('mini.completion').setup({
-    lsp_completion = {
-      -- Without this config autocompletion is set up through `:h 'completefunc'`.
-      -- Although not needed, setting up through `:h 'omnifunc'` is cleaner
-      -- (sets up only when needed) and makes it possible to use `<C-u>`.
-      source_func = 'omnifunc',
-      auto_setup = false,
-      process_items = process_items,
-    },
-  })
-
-  -- Set 'omnifunc' for LSP completion only when needed.
-  local on_attach = function(ev)
-    vim.bo[ev.buf].omnifunc = 'v:lua.MiniCompletion.completefunc_lsp'
-  end
-  Config.new_autocmd('LspAttach', nil, on_attach, "Set 'omnifunc'")
-
-  -- Advertise to servers that Neovim now supports certain set of completion and
-  -- signature features through 'mini.completion'.
-  vim.lsp.config('*', { capabilities = MiniCompletion.get_lsp_capabilities() })
-end)
+-- Completion and signature help is provided by 'blink.cmp' instead of
+-- 'mini.completion' - see 'plugin/40_plugins.lua'. It also advertises LSP
+-- completion capabilities and sets up `<Tab>` / `<S-Tab>` / `<CR>` completion
+-- keymaps there (overriding the 'pmenu_*' multistep mappings below for its
+-- own popup menu).
 
 -- Navigate and manipulate file system
 --
@@ -772,6 +722,19 @@ later(function()
       snippets.gen_loader.from_file(config_path .. '/snippets/global.json'),
       -- Load from 'snippets/' directory of plugins, like 'friendly-snippets'
       snippets.gen_loader.from_lang({ lang_patterns = lang_patterns }),
+    },
+    expand = {
+      -- Hide the '•' / '∎' empty-tabstop markers entirely. They're meant to
+      -- show where to type next, but with 'blink.cmp's `auto_brackets` (see
+      -- 'plugin/40_plugins.lua') this session now starts silently on nearly
+      -- every function completion, not just deliberate snippet expansion -
+      -- and a marker doesn't disappear just by `<Tab>`-ing past it unfilled
+      -- (jumping only marks it "visited", not clearing it); only stopping
+      -- the whole session (`<C-c>`) or explicitly typing over it does. That
+      -- makes the marker look "stuck" far more often than it used to.
+      -- Jumping between tabstops (`<Tab>` / `<S-Tab>`) still works the same;
+      -- only the visual marker is gone.
+      insert = function(snippet) return MiniSnippets.default_insert(snippet, { empty_tabstop = '', empty_tabstop_final = '' }) end,
     },
   })
 
