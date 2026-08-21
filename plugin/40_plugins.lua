@@ -75,6 +75,10 @@ now_if_args(function()
     -- - Execute `:=require('nvim-treesitter').get_available()`
     -- - Visit 'SUPPORTED_LANGUAGES.md' file at
     --   https://github.com/nvim-treesitter/nvim-treesitter
+    --
+    -- TypeScript/JavaScript/React (matches 'vtsls', see 'Language servers'
+    -- below) and Vue.
+    'javascript', 'typescript', 'tsx', 'vue', 'css',
   }
   local isnt_installed = function(lang)
     return #vim.api.nvim_get_runtime_file('parser/' .. lang .. '.*', false) == 0
@@ -193,7 +197,14 @@ now_if_args(function()
       variableTypes = { enabled = false },
     },
   }
+  -- 'vue_ls' (see below) handles the template/CSS side of '.vue' Single-File
+  -- Components, but needs 'vtsls' to run the actual TypeScript side, via this
+  -- plugin bundled with the 'vue-language-server' Mason package - see the
+  -- "Vue support" section of 'nvim-lspconfig's own doc comment in
+  -- 'lsp/vtsls.lua'. Ported from LazyVim's 'lang.vue' extra.
+  local vue_ts_plugin_path = vim.fn.stdpath('data') .. '/mason/packages/vue-language-server/node_modules/@vue/language-server'
   vim.lsp.config('vtsls', {
+    filetypes = { 'javascript', 'javascriptreact', 'typescript', 'typescriptreact', 'vue' },
     settings = {
       complete_function_calls = true,
       vtsls = {
@@ -202,6 +213,17 @@ now_if_args(function()
         experimental = {
           maxInlayHintLength = 30,
           completion = { enableServerSideFuzzyMatch = true },
+        },
+        tsserver = {
+          globalPlugins = {
+            {
+              name = '@vue/typescript-plugin',
+              location = vue_ts_plugin_path,
+              languages = { 'vue' },
+              configNamespace = 'typescript',
+              enableForWorkspaceTypeScriptVersions = true,
+            },
+          },
         },
       },
       typescript = vtsls_ts_settings,
@@ -212,7 +234,7 @@ now_if_args(function()
   -- Use `:h vim.lsp.enable()` to automatically enable language server based on
   -- the rules provided by 'nvim-lspconfig'.
   -- Use `:h vim.lsp.config()` or 'after/lsp/' directory to configure servers.
-  vim.lsp.enable({ 'lua_ls', 'vtsls' })
+  vim.lsp.enable({ 'lua_ls', 'vtsls', 'vue_ls' })
 end)
 
 -- Buffer deletion =============================================================
