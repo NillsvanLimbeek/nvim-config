@@ -231,10 +231,31 @@ now_if_args(function()
     },
   })
 
+  -- 'eslint' (linting), ported from LazyVim's 'linting.eslint' extra.
+  -- 'workingDirectories = { mode = "auto" }' helps it find the right config
+  -- in a monorepo. Fix-on-save uses 'nvim-lspconfig's own documented recipe
+  -- (see its doc comment in 'lsp/eslint.lua'): the base 'on_attach' exposes
+  -- the ':LspEslintFixAll' command, run here via 'BufWritePre'.
+  local eslint_base_on_attach = vim.lsp.config.eslint.on_attach
+  vim.lsp.config('eslint', {
+    settings = { workingDirectories = { mode = 'auto' } },
+    on_attach = function(client, bufnr)
+      if eslint_base_on_attach then eslint_base_on_attach(client, bufnr) end
+      vim.api.nvim_create_autocmd('BufWritePre', { buffer = bufnr, command = 'LspEslintFixAll' })
+    end,
+  })
+
+  -- 'tailwindcss', ported from LazyVim's 'lang.tailwind' extra. Excludes
+  -- 'markdown' from 'nvim-lspconfig's (fairly broad) default filetype list -
+  -- attaching there is more noise than help.
+  vim.lsp.config('tailwindcss', {
+    filetypes = vim.tbl_filter(function(ft) return ft ~= 'markdown' end, vim.lsp.config.tailwindcss.filetypes),
+  })
+
   -- Use `:h vim.lsp.enable()` to automatically enable language server based on
   -- the rules provided by 'nvim-lspconfig'.
   -- Use `:h vim.lsp.config()` or 'after/lsp/' directory to configure servers.
-  vim.lsp.enable({ 'lua_ls', 'vtsls', 'vue_ls' })
+  vim.lsp.enable({ 'lua_ls', 'vtsls', 'vue_ls', 'eslint', 'tailwindcss' })
 end)
 
 -- Buffer deletion =============================================================
@@ -497,6 +518,36 @@ end)
 later(function()
   add('stevearc/conform.nvim')
 
+  -- 'prettier' filetypes, ported from LazyVim's 'formatting.prettier' extra.
+  -- Dropped its 'has_parser' check (calls out to `prettier --file-info` to
+  -- infer a parser for filetypes outside this list) - this config only ever
+  -- assigns 'prettier' to filetypes already known to be supported, so that
+  -- fallback path would never actually run.
+  local prettier_fts = {
+    'css', 'graphql', 'handlebars', 'html', 'javascript', 'javascriptreact',
+    'json', 'jsonc', 'less', 'markdown', 'markdown.mdx', 'scss', 'typescript',
+    'typescriptreact', 'vue', 'yaml',
+  }
+  local formatters_by_ft = {}
+  for _, ft in ipairs(prettier_fts) do formatters_by_ft[ft] = { 'prettier' } end
+
+  -- Only run 'prettier' in projects that actually have a config for it
+  -- (`.prettierrc`, `prettier.config.js`, a `"prettier"` key in
+  -- 'package.json', etc. - anything `prettier --find-config-path` resolves).
+  -- Otherwise it would format-on-save every project unconditionally, fighting
+  -- projects that intentionally use only 'eslint' for formatting (its
+  -- fix-on-save is set up separately, see 'Language servers' above).
+  -- Memoized per file - `:h conform-formatters-prettier-condition`-style
+  -- check, ported from LazyVim's 'M.has_config' ('LazyVim.memoize' there).
+  local has_prettier_config_cache = {}
+  local has_prettier_config = function(_, ctx)
+    if has_prettier_config_cache[ctx.filename] == nil then
+      vim.fn.system({ 'prettier', '--find-config-path', ctx.filename })
+      has_prettier_config_cache[ctx.filename] = vim.v.shell_error == 0
+    end
+    return has_prettier_config_cache[ctx.filename]
+  end
+
   -- See also:
   -- - `:h Conform`
   -- - `:h conform-options`
@@ -506,9 +557,13 @@ later(function()
       -- Allow formatting from LSP server if no dedicated formatter is available
       lsp_format = 'fallback',
     },
+    format_on_save = { timeout_ms = 500, lsp_format = 'fallback' },
     -- Map of filetype to formatters
     -- Make sure that necessary CLI tool is available
-    -- formatters_by_ft = { lua = { 'stylua' } },
+    formatters_by_ft = formatters_by_ft,
+    formatters = {
+      prettier = { condition = has_prettier_config },
+    },
   })
 end)
 
