@@ -176,10 +176,43 @@ now_if_args(function()
     end,
   })
 
+  -- 'vtsls' (TypeScript/JavaScript) config, ported from LazyVim's
+  -- 'lang.typescript' extra. 'nvim-lspconfig's own 'lsp/vtsls.lua' already
+  -- provides a sensible 'cmd'/'filetypes'/'root_dir' - only 'settings' needs
+  -- adding here (inlay hints, workspace TS version, etc.). Applied to both
+  -- 'typescript' and 'javascript', matching the source config.
+  local vtsls_ts_settings = {
+    updateImportsOnFileMove = { enabled = 'always' },
+    suggest = { completeFunctionCalls = true },
+    inlayHints = {
+      enumMemberValues = { enabled = true },
+      functionLikeReturnTypes = { enabled = true },
+      parameterNames = { enabled = 'literals' },
+      parameterTypes = { enabled = true },
+      propertyDeclarationTypes = { enabled = true },
+      variableTypes = { enabled = false },
+    },
+  }
+  vim.lsp.config('vtsls', {
+    settings = {
+      complete_function_calls = true,
+      vtsls = {
+        enableMoveToFileCodeAction = true,
+        autoUseWorkspaceTsdk = true,
+        experimental = {
+          maxInlayHintLength = 30,
+          completion = { enableServerSideFuzzyMatch = true },
+        },
+      },
+      typescript = vtsls_ts_settings,
+      javascript = vtsls_ts_settings,
+    },
+  })
+
   -- Use `:h vim.lsp.enable()` to automatically enable language server based on
   -- the rules provided by 'nvim-lspconfig'.
   -- Use `:h vim.lsp.config()` or 'after/lsp/' directory to configure servers.
-  vim.lsp.enable({ 'lua_ls' })
+  vim.lsp.enable({ 'lua_ls', 'vtsls' })
 end)
 
 -- Buffer deletion =============================================================
@@ -294,6 +327,99 @@ vim.keymap.set('n', 'gI', function() Snacks.picker.lsp_implementations() end, { 
 vim.keymap.set('n', 'gy', function() Snacks.picker.lsp_type_definitions() end, { desc = 'Goto type definition' })
 vim.keymap.set('n', 'gai', function() Snacks.picker.lsp_incoming_calls() end, { desc = 'Calls incoming' })
 vim.keymap.set('n', 'gao', function() Snacks.picker.lsp_outgoing_calls() end, { desc = 'Calls outgoing' })
+
+-- 'vtsls'-specific mappings and commands (ported from LazyVim's
+-- 'lang.typescript' extra, see 'Language servers' above), scoped to buffers
+-- where it actually attaches - matches how 'nvim-lspconfig's declarative
+-- per-server 'keys' option works.
+--
+-- NOTE: 'gD' ("Goto Source Definition", jump past a '.d.ts' to the real
+-- source) skipped - would have collided with the bare 'gD' mapping above
+-- (Snacks' declaration picker).
+vim.api.nvim_create_autocmd('LspAttach', {
+  callback = function(ev)
+    local client = vim.lsp.get_client_by_id(ev.data.client_id)
+    if not client or client.name ~= 'vtsls' then return end
+    local buf = ev.buf
+
+    -- 'gR' shows results via a quickfix list + 'snacks.nvim' picker (this
+    -- config has no 'folke/trouble.nvim', which the source LazyVim mapping
+    -- uses instead).
+    vim.keymap.set('n', 'gR', function()
+      client:exec_cmd(
+        { command = 'typescript.findAllFileReferences', arguments = { vim.uri_from_bufnr(buf) } },
+        { bufnr = buf },
+        function(_, result)
+          if not result then return end
+          vim.fn.setqflist({}, ' ', {
+            title = 'File References',
+            items = vim.lsp.util.locations_to_items(result, client.offset_encoding),
+          })
+          Snacks.picker.qflist()
+        end
+      )
+    end, { buffer = buf, desc = 'File references' })
+
+    vim.keymap.set('n', '<Leader>cM', function()
+      vim.lsp.buf.code_action({ apply = true, context = { only = { 'source.addMissingImports.ts' }, diagnostics = {} } })
+    end, { buffer = buf, desc = 'Add missing imports' })
+
+    vim.keymap.set('n', '<Leader>cD', function()
+      vim.lsp.buf.code_action({ apply = true, context = { only = { 'source.fixAll.ts' }, diagnostics = {} } })
+    end, { buffer = buf, desc = 'Fix all diagnostics' })
+
+    vim.keymap.set('n', '<Leader>cV', function()
+      client:exec_cmd({ command = 'typescript.selectTypeScriptVersion' }, { bufnr = buf })
+    end, { buffer = buf, desc = 'Select TS workspace version' })
+  end,
+})
+
+-- 'vtsls's "move to file" refactor needs the client to resolve the actual
+-- destination file interactively - 'Snacks.util.lsp.on()' hooks this the same
+-- way LazyVim's declarative per-server 'setup' option does.
+Snacks.util.lsp.on({ name = 'vtsls' }, function(_, client)
+  client.commands['_typescript.moveToFileRefactoring'] = function(command)
+    ---@type string, string, lsp.Range
+    local action, uri, range = unpack(command.arguments)
+
+    local function move(newf)
+      client:request('workspace/executeCommand', { command = command.command, arguments = { action, uri, range, newf } })
+    end
+
+    local fname = vim.uri_to_fname(uri)
+    client:request('workspace/executeCommand', {
+      command = 'typescript.tsserverRequest',
+      arguments = {
+        'getMoveToRefactoringFileSuggestions',
+        {
+          file = fname,
+          startLine = range.start.line + 1,
+          startOffset = range.start.character + 1,
+          endLine = range['end'].line + 1,
+          endOffset = range['end'].character + 1,
+        },
+      },
+    }, function(_, result)
+      ---@type string[]
+      local files = result.body.files
+      table.insert(files, 1, 'Enter new path...')
+      vim.ui.select(files, {
+        prompt = 'Select move destination:',
+        format_item = function(f) return vim.fn.fnamemodify(f, ':~:.') end,
+      }, function(f)
+        if f and f:find('^Enter new path') then
+          vim.ui.input({
+            prompt = 'Enter move destination:',
+            default = vim.fn.fnamemodify(fname, ':h') .. '/',
+            completion = 'file',
+          }, function(newf) return newf and move(newf) end)
+        elseif f then
+          move(f)
+        end
+      end)
+    end)
+  end
+end)
 
 -- Command line UI =============================================================
 

@@ -73,6 +73,7 @@ nmap('-', function() MiniFiles.open(vim.api.nvim_buf_get_name(0), true) end, 'Op
 -- Add an entry if you create a new group.
 Config.leader_group_clues = {
   { mode = 'n', keys = '<Leader>b', desc = '+Buffer' },
+  { mode = 'n', keys = '<Leader>c', desc = '+Code' },
   { mode = 'n', keys = '<Leader>f', desc = '+Find' },
   { mode = 'n', keys = '<Leader>g', desc = '+Git' },
   { mode = 'n', keys = '<Leader>l', desc = '+Language' },
@@ -83,6 +84,7 @@ Config.leader_group_clues = {
   { mode = 'n', keys = '<Leader>u', desc = '+UI' },
   { mode = 'n', keys = '<Leader>v', desc = '+Visits' },
 
+  { mode = 'x', keys = '<Leader>c', desc = '+Code' },
   { mode = 'x', keys = '<Leader>g', desc = '+Git' },
   { mode = 'x', keys = '<Leader>l', desc = '+Language' },
 }
@@ -119,6 +121,20 @@ nmap_leader('bW', '<Cmd>lua MiniBufremove.wipeout(0, true)<CR>', 'Wipeout!')
 nmap_leader('bd', function() Snacks.bufdelete() end,       'Delete buffer')
 nmap_leader('bo', function() Snacks.bufdelete.other() end, 'Delete other buffers')
 nmap_leader('bc', function() Snacks.bufdelete.all() end,   'Delete all buffers')
+
+-- c is for 'Code'. Common usage:
+-- - `<Leader>ca` - pick a code action to apply at the cursor (or over a visual
+--   selection)
+--
+-- Renders as a floating window because 'snacks.nvim's `picker` module (set up
+-- in 'plugin/40_plugins.lua') replaces `vim.ui.select()` with a Snacks picker
+-- by default (`ui_select`) - same mechanism 'vim.lsp.buf.code_action()' already
+-- uses internally to let you choose among multiple available actions.
+--
+-- The rest of the LazyVim-style 'c' group ('cM'/'cD'/'cV') is 'vtsls'-specific
+-- (TypeScript/JavaScript only) - see 'plugin/40_plugins.lua'.
+nmap_leader('ca', '<Cmd>lua vim.lsp.buf.code_action()<CR>', 'Code action')
+xmap_leader('ca', '<Cmd>lua vim.lsp.buf.code_action()<CR>', 'Code action')
 
 -- Top-level single-key mappings (from LazyVim/Snacks README defaults). Uses
 -- 'folke/snacks.nvim' picker + explorer, set up in 'plugin/40_plugins.lua'.
