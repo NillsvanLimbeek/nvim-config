@@ -94,8 +94,9 @@ now_if_args(function()
     --   https://github.com/nvim-treesitter/nvim-treesitter
     --
     -- TypeScript/JavaScript/React (matches 'vtsls', see 'Language servers'
-    -- below) and Vue.
-    'javascript', 'typescript', 'tsx', 'vue', 'css',
+    -- below), Vue, and HTML (also needed by 'nvim-ts-autotag' below, which
+    -- requires tree-sitter to be active for the buffer's filetype).
+    'javascript', 'typescript', 'tsx', 'vue', 'css', 'html',
   }
   local isnt_installed = function(lang)
     return #vim.api.nvim_get_runtime_file('parser/' .. lang .. '.*', false) == 0
@@ -112,6 +113,20 @@ now_if_args(function()
   end
   local ts_start = function(ev) vim.treesitter.start(ev.buf) end
   Config.new_autocmd('FileType', filetypes, ts_start, 'Start tree-sitter')
+end)
+
+-- HTML/JSX/Vue tag auto-closing ================================================
+
+-- Neither built-in Neovim nor 'mini.pairs' (which only pairs brackets/quotes)
+-- auto-closes or auto-renames matching HTML-style tags (`<div>` -> `</div>`,
+-- and keeping both ends in sync when editing a tag name). 'windwp/nvim-ts-autotag'
+-- adds that, using tree-sitter to find the matching tag - so it requires
+-- tree-sitter to already be active for the buffer (see 'languages' above:
+-- 'html', 'vue', 'tsx' cover this config's relevant filetypes; 'javascript'
+-- and 'typescript' are aliased to the same tag config internally).
+later(function()
+  add('windwp/nvim-ts-autotag')
+  require('nvim-ts-autotag').setup()
 end)
 
 -- Completion ==================================================================
