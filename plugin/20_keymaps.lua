@@ -141,7 +141,7 @@ xmap_leader('ca', '<Cmd>lua vim.lsp.buf.code_action()<CR>', 'Code action')
 -- Replaces the previous 'e' (Explore/Edit) group entirely, and most of the
 -- 'f' (Find) group below - both used to be 'mini.pick'-based (now disabled,
 -- see 'plugin/30_mini.lua'). 'mini.files' is still available via '-' above.
-nmap_leader('<Space>', function() Snacks.picker.smart() end,           'Smart find files')
+nmap_leader('<Space>', function() Snacks.picker.files() end,           'Smart find files')
 nmap_leader(',',       function() Snacks.picker.buffers() end,         'Buffers')
 nmap_leader('/',       function() Snacks.picker.grep() end,            'Grep')
 nmap_leader(':',       function() Snacks.picker.command_history() end, 'Command history')
