@@ -709,7 +709,7 @@ later(function()
   -- fallback path would never actually run.
   local prettier_fts = {
     'css', 'graphql', 'handlebars', 'html', 'javascript', 'javascriptreact',
-    'json', 'jsonc', 'less', 'markdown', 'markdown.mdx', 'scss', 'typescript',
+    'json', 'jsonc', 'less', 'markdown', 'scss', 'typescript',
     'typescriptreact', 'vue', 'yaml',
   }
   local formatters_by_ft = {}
