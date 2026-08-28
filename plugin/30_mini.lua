@@ -142,7 +142,11 @@ now(function()
         -- `icon = ''` drops the leading  git-diff icon (lualine's diff
         -- component showed bare symbols/counts, no icon of its own).
         local diff = MiniStatusline.section_diff({ trunc_width = 75, icon = '' })
-        local filename = MiniStatusline.section_filename({ trunc_width = 140 })
+        -- Always relative to cwd ('%f'), never 'MiniStatusline.section_filename()'s
+        -- default of switching to the full absolute path ('%F') once the window
+        -- is wider than 'trunc_width' - matches the previous 'lualine.nvim'
+        -- layout's 'filename' component ('path = 1'), which was always relative.
+        local filename = (vim.bo.buftype == 'terminal') and '%t' or '%f%m%r'
         local location = MiniStatusline.section_location({ trunc_width = 75 })
 
         return MiniStatusline.combine_groups({
