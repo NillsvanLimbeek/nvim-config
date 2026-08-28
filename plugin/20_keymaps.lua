@@ -236,23 +236,27 @@ nmap_leader('oz', '<Cmd>lua MiniMisc.zoom()<CR>',          'Zoom toggle')
 
 -- q is for 'Session' (via 'mini.sessions', see 'plugin/30_mini.lua'). Named
 -- after and mnemonically matching LazyVim's 'quit/session' group and its
--- 'persistence.nvim'-based `<Leader>qs` (Restore Session) keymap.
+-- 'persistence.nvim'-based `<Leader>qs`/`qS` (Restore/Select Session) keymaps.
 --
--- Unlike 'persistence.nvim', 'mini.sessions' doesn't auto-scope a session to
--- the current directory - every session needs an explicit name, hence the
--- separate 'New' (prompts for one) vs 'Write' (re-saves the already-active
--- one in place) mappings below.
--- - `<Leader>qn` - start new session (prompts for a name)
--- - `<Leader>qs` - restore a session (pick from list)
+-- 'mini.sessions' has its own notion of a *local* session: writing/reading
+-- under the special name `MiniSessions.config.file` (`'Session.vim'`) scopes
+-- it to the current working directory instead of the named/global session
+-- store - `MiniSessions.read()` (no name) auto-prefers that local session for
+-- the cwd if present (else falls back to latest), giving the same
+-- directory-scoped restore 'persistence.nvim' provides.
+-- - `<Leader>qs` - restore session for the current directory (auto)
+-- - `<Leader>qS` - restore a session (pick from list)
 -- - `<Leader>ql` - restore the most recently modified session
--- - `<Leader>qw` - write/save the currently active session
+-- - `<Leader>qw` - write/save the local (per-directory) session
+-- - `<Leader>qn` - start new named/global session (prompts for a name)
 -- - `<Leader>qd` - delete a session (pick from list)
 local session_new = 'vim.ui.input({ prompt = "Session name: " }, MiniSessions.write)'
-nmap_leader('qd', '<Cmd>lua MiniSessions.select("delete")<CR>',            'Delete')
+nmap_leader('qd', '<Cmd>lua MiniSessions.select("delete")<CR>',                 'Delete')
 nmap_leader('ql', '<Cmd>lua MiniSessions.read(MiniSessions.get_latest())<CR>', 'Restore latest')
-nmap_leader('qn', '<Cmd>lua ' .. session_new .. '<CR>',                    'New')
-nmap_leader('qs', '<Cmd>lua MiniSessions.select("read")<CR>',              'Restore (select)')
-nmap_leader('qw', '<Cmd>lua MiniSessions.write()<CR>',                     'Write current')
+nmap_leader('qn', '<Cmd>lua ' .. session_new .. '<CR>',                        'New (named)')
+nmap_leader('qs', '<Cmd>lua MiniSessions.read()<CR>',                          'Restore (cwd)')
+nmap_leader('qS', '<Cmd>lua MiniSessions.select("read")<CR>',                  'Restore (select)')
+nmap_leader('qw', '<Cmd>lua MiniSessions.write(MiniSessions.config.file)<CR>', 'Write local (cwd)')
 
 -- s is for 'Split' (window). Ported from LazyVim config.
 nmap_leader('sv', '<C-w>v',         'Split window vertically')
