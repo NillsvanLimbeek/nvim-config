@@ -128,7 +128,35 @@ now(function() require('mini.sessions').setup() end)
 -- See also:
 -- - `:h MiniStatusline-example-content` - example of default content. Use it to
 --   configure a custom statusline by setting `config.content.active` function.
-now(function() require('mini.statusline').setup() end)
+--
+-- Custom 'content.active' below mirrors the previous 'lualine.nvim' layout:
+-- mode | git branch | filename + diff | filetype | progress | location.
+now(function()
+  require('mini.statusline').setup({
+    content = {
+      active = function()
+        local mode, mode_hl = MiniStatusline.section_mode({ trunc_width = 120 })
+        local git = MiniStatusline.section_git({ trunc_width = 40 })
+        -- `icon = ''` drops the leading  git-diff icon (lualine's diff
+        -- component showed bare symbols/counts, no icon of its own).
+        local diff = MiniStatusline.section_diff({ trunc_width = 75, icon = '' })
+        local filename = MiniStatusline.section_filename({ trunc_width = 140 })
+        local location = MiniStatusline.section_location({ trunc_width = 75 })
+
+        return MiniStatusline.combine_groups({
+          { hl = mode_hl, strings = { mode } },
+          { hl = 'MiniStatuslineDevinfo', strings = { git } },
+          '%<', -- Mark general truncate point
+          { hl = 'MiniStatuslineFilename', strings = { filename, diff } },
+          '%=', -- End left alignment
+          { hl = 'MiniStatuslineFileinfo', strings = { vim.bo.filetype } },
+          { hl = mode_hl, strings = { '%p%%' } }, -- Progress through file
+          { hl = mode_hl, strings = { location } },
+        })
+      end,
+    },
+  })
+end)
 
 -- Tabline. Sets `:h 'tabline'` to show all listed buffers in a line at the top.
 -- Buffers are ordered as they were created. Navigate with `[b` and `]b`.
@@ -424,6 +452,23 @@ later(function() require('mini.cursorword').setup() end)
 later(function()
   require('mini.diff').setup({
     view = { style = 'sign', signs = { add = '▎', change = '▎', delete = '▎' } },
+  })
+
+  -- Reformat 'vim.b.minidiff_summary_string' (shown by 'mini.statusline') to
+  -- use added/modified/removed icons matching the previous 'lualine.nvim'
+  -- setup, instead of the default '#1 +3 ~1 -2' counts. See 'MiniDiff-diff-summary'.
+  vim.api.nvim_create_autocmd('User', {
+    pattern = 'MiniDiffUpdated',
+    group = vim.api.nvim_create_augroup('minimax-diff-summary-icons', {}),
+    callback = function(data)
+      local summary = vim.b[data.buf].minidiff_summary
+      if summary == nil then return end
+      local t = {}
+      if summary.add > 0 then table.insert(t, ' ' .. summary.add) end
+      if summary.change > 0 then table.insert(t, ' ' .. summary.change) end
+      if summary.delete > 0 then table.insert(t, ' ' .. summary.delete) end
+      vim.b[data.buf].minidiff_summary_string = table.concat(t, ' ')
+    end,
   })
 end)
 
