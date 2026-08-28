@@ -202,8 +202,10 @@ now(function() require('mini.tabline').setup() end)
 -- - `:h MiniFiles-manipulation` - more details about how to manipulate
 -- - `:h MiniFiles-examples` - examples of common setups
 now_if_args(function()
-  -- Enable directory/file preview
-  require('mini.files').setup({ windows = { preview = true } })
+  -- Enable directory/file preview. Widths ported from previous config.
+  require('mini.files').setup({
+    windows = { preview = true, width_focus = 25, width_preview = 50 },
+  })
 
   -- Add common bookmarks for every explorer. Example usage inside explorer:
   -- - `'c` to navigate into your config directory
