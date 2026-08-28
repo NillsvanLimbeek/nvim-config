@@ -103,8 +103,19 @@ Config.new_autocmd('FileType', nil, f, "Proper 'formatoptions'")
 -- a more conservative display while still being useful.
 -- See `:h vim.diagnostic` and `:h vim.diagnostic.config()`.
 local diagnostic_opts = {
-  -- Show signs on top of any other sign, but only for warnings and errors
-  signs = { priority = 9999, severity = { min = 'WARN', max = 'ERROR' } },
+  -- Show signs on top of any other sign, but only for warnings and errors.
+  -- Same filled-circle glyph for every severity, ported from the previous
+  -- config - only the 'DiagnosticSign*' highlight color tells them apart.
+  signs = {
+    priority = 9999,
+    severity = { min = 'WARN', max = 'ERROR' },
+    text = {
+      [vim.diagnostic.severity.ERROR] = '●',
+      [vim.diagnostic.severity.WARN] = '●',
+      [vim.diagnostic.severity.INFO] = '●',
+      [vim.diagnostic.severity.HINT] = '●',
+    },
+  },
 
   -- Show all diagnostics as underline (for their messages type `<Leader>ld`)
   underline = { severity = { min = 'HINT', max = 'ERROR' } },
