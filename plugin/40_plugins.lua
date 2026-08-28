@@ -415,6 +415,23 @@ now_if_args(function()
   vim.lsp.enable({ 'lua_ls', 'vtsls', 'vue_ls', 'eslint', 'tailwindcss' })
 end)
 
+-- Diagnostics =================================================================
+
+-- 'rachartier/tiny-inline-diagnostic.nvim' renders diagnostics as a compact,
+-- single-line message right after the offending code (with fancier styling
+-- and multiline support) instead of Neovim's plain built-in virtual text -
+-- ported from the previous config. Replaces (rather than adds to) the
+-- `virtual_text` entry in `diagnostic_opts` set up in 'plugin/10_options.lua'.
+later(function()
+  add('rachartier/tiny-inline-diagnostic.nvim')
+  require('tiny-inline-diagnostic').setup({
+    options = {
+      multilines = { enabled = true, always_show = true },
+    },
+  })
+  vim.diagnostic.config({ virtual_text = false })
+end)
+
 -- Buffer deletion =============================================================
 
 -- Ported from LazyVim config. 'folke/snacks.nvim' provides several independent
