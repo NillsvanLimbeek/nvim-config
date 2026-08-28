@@ -45,6 +45,25 @@ now(function()
   vim.cmd.colorscheme('catppuccin')
 end)
 
+-- Cursor =======================================================================
+
+-- 'sphamba/smear-cursor.nvim' animates a trailing smear effect as the cursor
+-- moves, making it easier to track - ported from the previous config's
+-- LazyVim extra ('lazyvim.plugins.extras.ui.smear-cursor'), same opts.
+-- Skipped inside Neovide, which already animates the cursor natively.
+--
+-- 'mini.animate's own cursor animation (see 'plugin/30_mini.lua') would
+-- otherwise conflict, but is left disabled there by default already.
+if vim.g.neovide == nil then
+  later(function()
+    add('sphamba/smear-cursor.nvim')
+    require('smear_cursor').setup({
+      hide_target_hack = true,
+      cursor_color = 'none',
+    })
+  end)
+end
+
 -- Tree-sitter ================================================================
 
 -- Tree-sitter is a tool for fast incremental parsing. It converts text into
