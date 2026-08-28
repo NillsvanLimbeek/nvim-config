@@ -348,8 +348,8 @@ now_if_args(function()
             'MiniAi', 'MiniAlign', 'MiniBasics', 'MiniBufremove', 'MiniClue',
             'MiniDeps', 'MiniDiff', 'MiniExtra', 'MiniFiles', 'MiniGit',
             'MiniIcons', 'MiniIndentscope', 'MiniInput', 'MiniKeymap', 'MiniMap',
-            'MiniMisc', 'MiniNotify', 'MiniSnippets',
-            'MiniSplitjoin', 'MiniTrailspace',
+            'MiniMisc', 'MiniNotify', 'MiniSnippets', 'MiniSplitjoin',
+            'MiniStatusline', 'MiniTrailspace',
           },
         },
       })
