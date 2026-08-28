@@ -313,11 +313,10 @@ now_if_args(function()
         diagnostics = {
           globals = {
             'MiniAi', 'MiniAlign', 'MiniBasics', 'MiniBufremove', 'MiniClue',
-            'MiniColors', 'MiniCompletion', 'MiniDeps', 'MiniDiff', 'MiniExtra',
-            'MiniFiles', 'MiniGit', 'MiniIcons', 'MiniIndentscope', 'MiniInput',
-            'MiniKeymap', 'MiniMap', 'MiniMisc', 'MiniNotify', 'MiniPick',
-            'MiniSessions', 'MiniSnippets', 'MiniSplitjoin', 'MiniTrailspace',
-            'MiniVisits',
+            'MiniDeps', 'MiniDiff', 'MiniExtra', 'MiniFiles', 'MiniGit',
+            'MiniIcons', 'MiniIndentscope', 'MiniInput', 'MiniKeymap', 'MiniMap',
+            'MiniMisc', 'MiniNotify', 'MiniSessions', 'MiniSnippets',
+            'MiniSplitjoin', 'MiniTrailspace',
           },
         },
       })

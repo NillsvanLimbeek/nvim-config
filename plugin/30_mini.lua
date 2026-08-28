@@ -216,13 +216,13 @@ end)
 
 -- Step two ===================================================================
 
--- Extra 'mini.nvim' functionality.
+-- Extra 'mini.nvim' functionality. Its pickers (`:h MiniExtra.pickers`) are
+-- unused - they needed 'mini.pick' as a rendering backend, replaced by
+-- 'snacks.nvim' (see 'plugin/40_plugins.lua') - but its generators below are:
 --
 -- See also:
--- - `:h MiniExtra.pickers` - pickers. Most are mapped in `<Leader>f` group.
---   Calling `setup()` makes 'mini.pick' respect 'mini.extra' pickers.
--- - `:h MiniExtra.gen_ai_spec` - 'mini.ai' textobject specifications
--- - `:h MiniExtra.gen_highlighter` - 'mini.hipatterns' highlighters
+-- - `:h MiniExtra.gen_ai_spec` - 'mini.ai' textobject specifications (used below)
+-- - `:h MiniExtra.gen_highlighter` - 'mini.hipatterns' highlighters (used below)
 later(function() require('mini.extra').setup() end)
 
 -- Extend and create a/i textobjects, like `:h a(`, `:h a'`, and more).
@@ -442,8 +442,6 @@ end)
 later(function() require('mini.git').setup() end)
 
 -- Highlight patterns in text. Like `TODO`/`NOTE` or color hex codes.
--- Example usage:
--- - `:Pick hipatterns` - pick among all highlighted patterns
 --
 -- See also:
 -- - `:h MiniHipatterns-examples` - examples of common setups
@@ -623,39 +621,10 @@ later(function()
   require('mini.pairs').setup({ modes = { command = true } })
 end)
 
--- Pick anything with single window layout and fast matching. This is one of
--- the main usability improvements as it powers a lot of "find things quickly"
--- workflows. How to use a picker:
--- - Start picker, usually with `:Pick <picker-name>` command. Like `:Pick files`.
---   It shows a single window in the bottom left corner filled with possible items
---   to choose from. Current item has special full line highlighting.
---   At the top there is a current query used to filter+sort items.
--- - Type characters (appear at top) to narrow down items. There is fuzzy matching:
---   characters may not match one-by-one, but they should be in correct order.
--- - Navigate down/up with `<C-n>`/`<C-p>`.
--- - Press `<Tab>` to show item's preview. `<Tab>` again goes back to items.
--- - Press `<S-Tab>` to show picker's info. `<S-Tab>` again goes back to items.
--- - Press `<CR>` to choose an item. The exact action depends on the picker: `files`
---   picker opens a selected file, `help` picker opens help page on selected tag.
---   To close picker without choosing an item, press `<Esc>`.
---
--- Example usage:
--- - `<Leader>ff` - *f*ind *f*iles; for best performance requires `ripgrep`
--- - `<Leader>fg` - *f*ind inside files (a.k.a. "to *g*rep"); requires `ripgrep`
--- - `<Leader>fh` - *f*ind *h*elp tag
--- - `<Leader>fr` - *r*esume latest picker
--- - `:h vim.ui.select()` - implemented with 'mini.pick'
---
--- See also:
--- - `:h MiniPick-overview` - overview of picker functionality
--- - `:h MiniPick-examples` - examples of common setups
--- - `:h MiniPick.builtin` and `:h MiniExtra.pickers` - available pickers;
---   Execute one either with Lua function, `:Pick <picker-name>` command, or
---   one of `<Leader>f` mappings defined in 'plugin/20_keymaps.lua'
---
--- Replaced by 'snacks.nvim' picker + explorer, set up in 'plugin/40_plugins.lua'
--- (it takes over `vim.ui.select()` too, via its `ui_select` default).
--- later(function() require('mini.pick').setup() end)
+-- 'mini.pick' (fuzzy picker) is replaced by 'snacks.nvim' picker + explorer,
+-- set up in 'plugin/40_plugins.lua' (it takes over `vim.ui.select()` too, via
+-- its `ui_select` default). See `<Leader>f`/`<Leader><Space>` mappings in
+-- 'plugin/20_keymaps.lua'.
 
 -- Manage and expand snippets (templates for a frequently used text).
 -- Typical workflow is to type snippet's (configurable) prefix and expand it
@@ -797,19 +766,10 @@ end)
 -- - `<Leader>ot` - trim all trailing whitespace in a buffer
 later(function() require('mini.trailspace').setup() end)
 
--- Track and reuse file system visits. Every file/directory visit is persistently
--- tracked on disk to later reuse: show in special frecency order, etc. It also
--- supports adding labels to visited paths to quickly navigate between them.
--- Example usage:
--- - `<Leader>fv` - find across all visits
--- - `<Leader>vv` / `<Leader>vV` - add/remove special "core" label to current file
--- - `<Leader>vc` / `<Leader>vC` - show files with "core" label; all or added within
---   current working directory
---
--- See also:
--- - `:h MiniVisits-overview` - overview of how module works
--- - `:h MiniVisits-examples` - examples of common setups
-later(function() require('mini.visits').setup() end)
+-- 'mini.visits' (persistent file-visit tracking/labeling) is removed: its
+-- browsing side (`MiniExtra.pickers.visit_paths()`) needed 'mini.pick' as
+-- a rendering backend, which has no Snacks equivalent - without it, visits
+-- could only be labeled, never browsed.
 
 -- Not mentioned here, but can be useful:
 -- - 'mini.doc' - needed only for plugin developers.

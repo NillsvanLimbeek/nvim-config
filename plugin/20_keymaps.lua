@@ -295,17 +295,4 @@ nmap_leader('tf', '<Cmd>tabnew %<CR>', 'Open current buffer in new tab')
 
 -- u is for 'UI'. From LazyVim/Snacks README defaults.
 nmap_leader('uC', function() Snacks.picker.colorschemes() end, 'Colorschemes')
-
--- v is for 'Visits'. Common usage:
--- - `<Leader>vv` - add    "core" label to current file.
--- - `<Leader>vV` - remove "core" label to current file.
---
--- NOTE: previously included 'vc'/'vC' pickers over "core"-labeled files, via
--- `MiniExtra.pickers.visit_paths()`. Dropped along with 'mini.pick' (see
--- 'plugin/30_mini.lua'), which they needed as a rendering backend and has no
--- Snacks equivalent for 'mini.visits'' label tracking.
-nmap_leader('vv', '<Cmd>lua MiniVisits.add_label("core")<CR>',    'Add "core" label')
-nmap_leader('vV', '<Cmd>lua MiniVisits.remove_label("core")<CR>', 'Remove "core" label')
-nmap_leader('vl', '<Cmd>lua MiniVisits.add_label()<CR>',          'Add label')
-nmap_leader('vL', '<Cmd>lua MiniVisits.remove_label()<CR>',       'Remove label')
 -- stylua: ignore end
