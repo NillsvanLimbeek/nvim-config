@@ -776,6 +776,27 @@ later(function()
   })
 end)
 
+-- Markdown rendering ==========================================================
+
+-- 'MeanderingProgrammer/render-markdown.nvim' renders markdown (headings,
+-- list bullets/checkboxes, block quotes, tables, code block borders) styled
+-- inline while editing, using the 'markdown'/'markdown_inline' tree-sitter
+-- parsers installed above - no external browser/terminal viewer needed.
+-- Auto-detects and uses 'mini.icons' (set up in 'plugin/30_mini.lua') for
+-- code block language icons.
+later(function()
+  add('MeanderingProgrammer/render-markdown.nvim')
+  require('render-markdown').setup()
+end)
+
+-- Toggle rendering for the current buffer with '<Leader>um' - useful when
+-- editing raw markdown (e.g. table alignment) gets in the way of the styling.
+-- NOTE: 'nmap_leader' (see 'plugin/20_keymaps.lua') is local to that file, so
+-- 'vim.keymap.set()' is used directly here instead, matching how other
+-- plugin-specific '<Leader>' mappings in this file are added (e.g. 'vtsls's
+-- '<Leader>cM' / '<Leader>cD' / '<Leader>cV' above).
+vim.keymap.set('n', '<Leader>um', '<Cmd>RenderMarkdown toggle<CR>', { desc = 'Toggle markdown render' })
+
 -- Snippets ===================================================================
 
 -- Although 'mini.snippets' provides functionality to manage snippet files, it
