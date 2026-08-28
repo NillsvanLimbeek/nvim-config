@@ -98,10 +98,8 @@ end)
 now(function() require('mini.notify').setup() end)
 
 -- Session management. A thin wrapper around `:h mksession` that consistently
--- manages session files. Example usage:
--- - `<Leader>sn` - start new session
--- - `<Leader>sr` - read previously started session
--- - `<Leader>sd` - delete previously started session
+-- manages session files. See the 'q' (Session) Leader group in
+-- 'plugin/20_keymaps.lua' for keymaps: `<Leader>qn`/`qs`/`ql`/`qw`/`qd`.
 now(function() require('mini.sessions').setup() end)
 
 -- Start screen. This is what is shown when you open Neovim like `nvim`.
