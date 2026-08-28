@@ -473,7 +473,7 @@ end)
 --
 -- See also:
 -- - `:h MiniIndentscope.gen_animation` - available animation rules
-later(function() require('mini.indentscope').setup() end)
+later(function() require('mini.indentscope').setup({ symbol = '│' }) end)
 
 -- Customizable user input. Improves how Neovim and plugins ask for input.
 -- By default shows a floating window with the input prompt as title. Window
