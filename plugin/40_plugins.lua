@@ -102,6 +102,15 @@ now_if_args(function()
     -- below), Vue, and HTML (also needed by 'nvim-ts-autotag' below, which
     -- requires tree-sitter to be active for the buffer's filetype).
     'javascript', 'typescript', 'tsx', 'vue', 'css', 'html',
+    -- Inline markdown constructs (bold/italic/links/inline code) - without
+    -- this, only block-level markdown highlights correctly.
+    'markdown_inline',
+    -- Common everyday filetypes: shell scripts, JSON/JSONC (already formatted
+    -- via 'prettier', see "Formatting" below, but otherwise unparsed).
+    'bash', 'json',
+    -- Editing tree-sitter query files themselves, and embedded regex (e.g.
+    -- inside Lua patterns/JS RegExp literals, comments).
+    'query', 'regex',
   }
   local isnt_installed = function(lang)
     return #vim.api.nvim_get_runtime_file('parser/' .. lang .. '.*', false) == 0
