@@ -129,6 +129,48 @@ later(function()
   require('nvim-ts-autotag').setup()
 end)
 
+-- Jumping ======================================================================
+
+-- 'folke/flash.nvim' jumps to any visible location (labeled 2-character search)
+-- or tree-sitter node, replacing 'mini.jump2d' (disabled in 'plugin/30_mini.lua').
+--
+-- NOTE: uses bare `s` / `S`, which are core Vim's "substitute" motions - not
+-- otherwise mapped in this config, so nothing is lost. `r` / `R` are only
+-- overridden in operator-pending/visual mode (see below), so their Normal-mode
+-- meaning ("replace char" / "Replace mode") is untouched. This also means
+-- 'mini.surround' (see 'plugin/30_mini.lua') had to move off its default bare
+-- `s`-prefixed mappings onto a `gs` prefix instead, to avoid colliding with
+-- Flash's `s` / `S`.
+--
+-- Example usage:
+-- - `s` then 2 characters - jump to any matching visible location
+-- - `S` then a character - jump to a tree-sitter node starting with it
+-- - `dr` + 2 characters - delete text up to a remote (not-yet-jumped-to) match
+-- - `<C-s>` while searching (`/`, `?`) - toggle Flash's labels on search matches
+--
+-- See also:
+-- - `:h flash.nvim` (after install) or https://github.com/folke/flash.nvim
+later(function()
+  add('folke/flash.nvim')
+  require('flash').setup()
+
+  vim.keymap.set({ 'n', 'x', 'o' }, 's', function() require('flash').jump() end, { desc = 'Flash jump' })
+  vim.keymap.set(
+    { 'n', 'x', 'o' },
+    'S',
+    function() require('flash').treesitter() end,
+    { desc = 'Flash treesitter jump' }
+  )
+  vim.keymap.set('o', 'r', function() require('flash').remote() end, { desc = 'Flash remote' })
+  vim.keymap.set(
+    { 'o', 'x' },
+    'R',
+    function() require('flash').treesitter_search() end,
+    { desc = 'Flash treesitter search' }
+  )
+  vim.keymap.set('c', '<C-s>', function() require('flash').toggle() end, { desc = 'Toggle Flash search' })
+end)
+
 -- Completion ==================================================================
 
 -- 'saghen/blink.cmp' replaces 'mini.completion' (disabled in 'plugin/30_mini.lua')

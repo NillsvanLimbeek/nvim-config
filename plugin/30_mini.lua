@@ -356,8 +356,10 @@ later(function()
       { mode = { 'n', 'x' }, keys = '"' },        -- Registers
       { mode = { 'i', 'c' }, keys = '<C-r>' },
       { mode =   'n',        keys = '<C-w>' },    -- Window commands
-      { mode = { 'n', 'x' }, keys = 's' },        -- `s` key (mini.surround, etc.)
       { mode = { 'n', 'x' }, keys = 'z' },        -- `z` key
+      -- NOTE: no dedicated `s` trigger - 'mini.surround' moved to a `gs`
+      -- prefix (covered by the `g` trigger above) since bare `s` / `S` are
+      -- now 'flash.nvim's jump keys instead (see 'plugin/40_plugins.lua').
     },
   })
 end)
@@ -507,17 +509,10 @@ later(function() require('mini.input').setup() end)
 -- - `dt)` - *d*elete *t*ill next closing parenthesis (`)`)
 later(function() require('mini.jump').setup() end)
 
--- Jump within visible lines to pre-defined spots via iterative label filtering.
--- Spots are computed by a configurable spotter function. Example usage:
--- - Lock eyes on desired location to jump
--- - `<CR>` - start jumping; this shows character labels over target spots
--- - Type character that appears over desired location; number of target spots
---   should be reduced
--- - Keep typing labels until target spot is unique to perform the jump
---
--- See also:
--- - `:h MiniJump2d.gen_spotter` - list of available spotters
-later(function() require('mini.jump2d').setup() end)
+-- 'mini.jump2d' (jump to any visible spot via iterative label filtering) is
+-- replaced by 'folke/flash.nvim' - see 'plugin/40_plugins.lua' - which covers
+-- the same "jump anywhere on screen" role plus tree-sitter node jumps and
+-- multi-window/remote actions.
 
 -- Special key mappings. Provides helpers to map:
 -- - Multi-step actions. Apply action 1 if condition is met; else apply
@@ -765,21 +760,37 @@ later(function() require('mini.splitjoin').setup() end)
 --
 -- Example usage (this may feel intimidating at first, but after practice it
 -- becomes second nature during text editing):
--- - `saiw)` - *s*urround *a*dd for *i*nside *w*ord parenthesis (`)`)
--- - `sdf`   - *s*urround *d*elete *f*unction call (like `f(var)` -> `var`)
--- - `srb[`  - *s*urround *r*eplace *b*racket (any of [], (), {}) with padded `[`
--- - `sf*`   - *s*urround *f*ind right part of `*` pair (like bold in markdown)
--- - `shf`   - *s*urround *h*ighlight current *f*unction call
--- - `srn{{` - *s*urround *r*eplace *n*ext curly bracket `{` with padded `{`
--- - `sdl'`  - *s*urround *d*elete *l*ast quote pair (`'`)
--- - `vaWsa<Space>` - *v*isually select *a*round *W*ORD and *s*urround *a*dd
---                    spaces (`<Space>`)
+-- - `gsaiw)` - *g*o *s*urround *a*dd for *i*nside *w*ord parenthesis (`)`)
+-- - `gsdf`   - *g*o *s*urround *d*elete *f*unction call (like `f(var)` -> `var`)
+-- - `gsrb[`  - *g*o *s*urround *r*eplace *b*racket (any of [], (), {}) with padded `[`
+-- - `gsf*`   - *g*o *s*urround *f*ind right part of `*` pair (like bold in markdown)
+-- - `gshf`   - *g*o *s*urround *h*ighlight current *f*unction call
+-- - `gsrn{{` - *g*o *s*urround *r*eplace *n*ext curly bracket `{` with padded `{`
+-- - `gsdl'`  - *g*o *s*urround *d*elete *l*ast quote pair (`'`)
+-- - `vaWgsa<Space>` - *v*isually select *a*round *W*ORD and *g*o *s*urround
+--                     *a*dd spaces (`<Space>`)
+--
+-- NOTE: default mappings are all `s`-prefixed, but bare `s` / `S` are used by
+-- 'folke/flash.nvim' instead (see 'plugin/40_plugins.lua') for jumping, so
+-- these are moved to a `gs`-prefix - same convention LazyVim uses when both
+-- plugins are enabled together.
 --
 -- See also:
 -- - `:h MiniSurround-builtin-surroundings` - list of all supported surroundings
 -- - `:h MiniSurround-surrounding-specification` - examples of custom surroundings
 -- - `:h MiniSurround-vim-surround-config` - alternative set of action mappings
-later(function() require('mini.surround').setup() end)
+later(function()
+  require('mini.surround').setup({
+    mappings = {
+      add = 'gsa',
+      delete = 'gsd',
+      find = 'gsf',
+      find_left = 'gsF',
+      highlight = 'gsh',
+      replace = 'gsr',
+    },
+  })
+end)
 
 -- Highlight and remove trailspace. Temporarily stops highlighting in Insert mode
 -- to reduce noise when typing. Example usage:
