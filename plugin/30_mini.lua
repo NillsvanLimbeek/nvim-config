@@ -100,7 +100,33 @@ now(function() require('mini.notify').setup() end)
 -- Session management. A thin wrapper around `:h mksession` that consistently
 -- manages session files. See the 'q' (Session) Leader group in
 -- 'plugin/20_keymaps.lua' for keymaps: `<Leader>qs`/`qS`/`ql`/`qw`/`qn`/`qd`.
-now(function() require('mini.sessions').setup() end)
+--
+-- `autoread` restores the local (per-directory) session automatically on
+-- startup (skipped if opened with file arguments or several listed buffers -
+-- see `:h MiniSessions.read()`). The autocmd below complements the module's
+-- own `autowrite` (which only re-saves a session already active this run) by
+-- unconditionally saving the local session on quit too, matching
+-- 'persistence.nvim's autosave from the previous config - every directory
+-- gets a session saved and restored without ever touching the 'q' mappings.
+now(function()
+  require('mini.sessions').setup({ autoread = true })
+
+  vim.api.nvim_create_autocmd('VimLeavePre', {
+    group = vim.api.nvim_create_augroup('minimax-session-autosave', {}),
+    callback = function()
+      -- Skip if there's nothing worth saving (e.g. `nvim` opened and quit
+      -- right away, or only special buffers like a terminal are open).
+      local has_real_buffer = false
+      for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        if vim.bo[buf].buflisted and vim.bo[buf].buftype == '' and vim.api.nvim_buf_get_name(buf) ~= '' then
+          has_real_buffer = true
+          break
+        end
+      end
+      if has_real_buffer then MiniSessions.write(MiniSessions.config.file, { force = true }) end
+    end,
+  })
+end)
 
 -- Start screen. This is what is shown when you open Neovim like `nvim`.
 -- Example usage:
