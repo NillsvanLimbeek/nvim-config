@@ -22,6 +22,11 @@ now(function()
   require('catppuccin').setup({
     flavour = 'mocha',
     transparent_background = true,
+    -- Catppuccin only auto-detects plugins installed via 'vim.pack', 'pckr',
+    -- or 'lazy.nvim' - never 'mini.deps' (used here) - so 'mini.nvim'
+    -- integration (MiniStatusline mode colors, MiniIndentscope, MiniClue, etc.)
+    -- has to be turned on explicitly instead of relying on auto-detection.
+    integrations = { mini = true },
     -- Give the selected item in popup menus (completion, etc.) more contrast
     -- than the default 'surface0', matching blink.cmp's selection highlight.
     custom_highlights = function(colors)
