@@ -250,6 +250,12 @@ now_if_args(function()
     },
     sources = { default = { 'lsp', 'path', 'snippets', 'buffer' } },
     snippets = { preset = 'mini_snippets' },
+    -- Disabled: blink's cmdline completion (on by default) draws its own
+    -- floating popup for the `:`/`/` command line, fighting 'mini.cmdline'
+    -- (see 'plugin/30_mini.lua'), which already drives that via the native
+    -- wildmenu - and neither renders reliably under 'noice.nvim's floating
+    -- cmdline below, which left `<Tab>` not cycling any results.
+    cmdline = { enabled = false },
     completion = {
       menu = { border = 'rounded' },
       documentation = { auto_show = true, window = { border = 'rounded' } },
