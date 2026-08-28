@@ -39,6 +39,11 @@ now(function()
         -- (which now has a border) doesn't look like a hole in the editor.
         Pmenu = { bg = colors.mantle },
         PmenuKind = { bg = colors.mantle },
+        -- 'mini.statusline's filename section (see 'plugin/30_mini.lua') gets
+        -- a solid 'mantle' background from catppuccin's mini integration by
+        -- default, unlike 'StatusLine' itself which already respects
+        -- 'transparent_background' above - make it transparent too.
+        MiniStatuslineFilename = { fg = colors.text, bg = colors.none },
       }
     end,
   })
