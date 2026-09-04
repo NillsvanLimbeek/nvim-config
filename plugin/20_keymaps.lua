@@ -125,16 +125,26 @@ nmap_leader('bc', function() Snacks.bufdelete.all() end,   'Delete all buffers')
 -- c is for 'Code'. Common usage:
 -- - `<Leader>ca` - pick a code action to apply at the cursor (or over a visual
 --   selection)
+-- - `<Leader>co` - organize imports (sort + drop unused) in the current buffer
 --
 -- Renders as a floating window because 'snacks.nvim's `picker` module (set up
 -- in 'plugin/40_plugins.lua') replaces `vim.ui.select()` with a Snacks picker
 -- by default (`ui_select`) - same mechanism 'vim.lsp.buf.code_action()' already
 -- uses internally to let you choose among multiple available actions.
 --
--- The rest of the LazyVim-style 'c' group ('cM'/'cD'/'cV') is 'vtsls'-specific
--- (TypeScript/JavaScript only) - see 'plugin/40_plugins.lua'.
+-- 'co' runs the standard 'source.organizeImports' code action kind directly
+-- (skips the picker since there's only one match) - works with any LSP that
+-- advertises it, not just TypeScript's 'vtsls'. The rest of the LazyVim-style
+-- 'c' group ('cM'/'cD'/'cV') is 'vtsls'-specific (TypeScript/JavaScript only)
+-- - see 'plugin/40_plugins.lua'.
 nmap_leader('ca', '<Cmd>lua vim.lsp.buf.code_action()<CR>', 'Code action')
 xmap_leader('ca', '<Cmd>lua vim.lsp.buf.code_action()<CR>', 'Code action')
+
+nmap_leader(
+  'co',
+  '<Cmd>lua vim.lsp.buf.code_action({ apply = true, context = { only = { "source.organizeImports" }, diagnostics = {} } })<CR>',
+  'Organize imports'
+)
 
 -- Top-level single-key mappings (from LazyVim/Snacks README defaults). Uses
 -- 'folke/snacks.nvim' picker + explorer, set up in 'plugin/40_plugins.lua'.
