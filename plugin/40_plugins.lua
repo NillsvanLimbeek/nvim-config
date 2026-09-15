@@ -44,6 +44,21 @@ now(function()
         -- default, unlike 'StatusLine' itself which already respects
         -- 'transparent_background' above - make it transparent too.
         MiniStatuslineFilename = { fg = colors.text, bg = colors.none },
+        -- 'mini.snippets' (see 'plugin/30_mini.lua') links its tabstop
+        -- highlights to 'DiagnosticUnderline*' by default (see its
+        -- 'H.create_default_hl()'), so active snippet fields render as an
+        -- underline that's easy to mistake for a diagnostic. Link them to
+        -- 'Normal' instead, to disable that highlighting entirely - an empty
+        -- `{}` table isn't enough here, since 'mini.snippets' applies its own
+        -- links with `default = true` (meaning "only if unset") and Neovim
+        -- doesn't count a highlight set to `{}` as "set" for that check, so
+        -- it would still win regardless of load order; an explicit `link`
+        -- does count, so it doesn't.
+        MiniSnippetsCurrent = { link = 'Normal' },
+        MiniSnippetsCurrentReplace = { link = 'Normal' },
+        MiniSnippetsFinal = { link = 'Normal' },
+        MiniSnippetsUnvisited = { link = 'Normal' },
+        MiniSnippetsVisited = { link = 'Normal' },
       }
     end,
   })
