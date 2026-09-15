@@ -713,7 +713,10 @@ later(function()
     popupmenu = { enabled = true, backend = 'nui' },
     messages = { enabled = false },
     notify = { enabled = false },
-    lsp = { progress = { enabled = false } },
+    -- `hover.silent`: don't notify "No information available" when a
+    -- hover request (e.g. 'K') has nothing to show - it renders as an
+    -- empty-looking popup via 'mini.notify' rather than useful info.
+    lsp = { hover = { silent = true }, progress = { enabled = false } },
     presets = {
       command_palette = true, -- position the cmdline and popupmenu together
       bottom_search = true, -- classic bottom cmdline for search
