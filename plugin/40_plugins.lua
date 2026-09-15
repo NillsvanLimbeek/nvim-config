@@ -48,17 +48,22 @@ now(function()
         -- highlights to 'DiagnosticUnderline*' by default (see its
         -- 'H.create_default_hl()'), so active snippet fields render as an
         -- underline that's easy to mistake for a diagnostic. Link them to
-        -- 'Normal' instead, to disable that highlighting entirely - an empty
+        -- 'NONE' instead, to disable that highlighting entirely - an empty
         -- `{}` table isn't enough here, since 'mini.snippets' applies its own
         -- links with `default = true` (meaning "only if unset") and Neovim
         -- doesn't count a highlight set to `{}` as "set" for that check, so
         -- it would still win regardless of load order; an explicit `link`
-        -- does count, so it doesn't.
-        MiniSnippetsCurrent = { link = 'Normal' },
-        MiniSnippetsCurrentReplace = { link = 'Normal' },
-        MiniSnippetsFinal = { link = 'Normal' },
-        MiniSnippetsUnvisited = { link = 'Normal' },
-        MiniSnippetsVisited = { link = 'Normal' },
+        -- does count, so it doesn't. Link to 'Normal' would also count, but
+        -- 'Normal' carries its own 'fg'/'bg', which then override the
+        -- buffer's syntax highlighting for tabstop text instead of just
+        -- removing the underline (rendering it in a flat grey). 'NONE'
+        -- resolves to zero attributes, so it blocks the default without
+        -- touching color.
+        MiniSnippetsCurrent = { link = 'NONE' },
+        MiniSnippetsCurrentReplace = { link = 'NONE' },
+        MiniSnippetsFinal = { link = 'NONE' },
+        MiniSnippetsUnvisited = { link = 'NONE' },
+        MiniSnippetsVisited = { link = 'NONE' },
       }
     end,
   })
