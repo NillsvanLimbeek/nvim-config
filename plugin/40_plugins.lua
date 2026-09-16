@@ -774,6 +774,18 @@ later(function()
   local formatters_by_ft = {}
   for _, ft in ipairs(prettier_fts) do formatters_by_ft[ft] = { 'prettier' } end
 
+  -- Filetypes where Tailwind CSS classes commonly show up in a 'class'/
+  -- 'className' attribute. Falls back to 'rustywind' (sorts classes into
+  -- Tailwind's recommended order) whenever 'prettier' itself doesn't run -
+  -- typically because the project has no prettier config at all, or one that
+  -- doesn't include 'prettier-plugin-tailwindcss'. 'stop_after_first' means
+  -- only the first available formatter actually runs, so a project that DOES
+  -- use that prettier plugin doesn't get sorted twice.
+  local tailwind_fts = { 'html', 'javascriptreact', 'typescriptreact', 'vue' }
+  for _, ft in ipairs(tailwind_fts) do
+    formatters_by_ft[ft] = { 'prettier', 'rustywind', stop_after_first = true }
+  end
+
   -- Only run 'prettier' in projects that actually have a config for it
   -- (`.prettierrc`, `prettier.config.js`, a `"prettier"` key in
   -- 'package.json', etc. - anything `prettier --find-config-path` resolves).
