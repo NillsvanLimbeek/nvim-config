@@ -115,26 +115,32 @@ nmap_leader('bs', new_scratch_buffer,                            'Scratch')
 nmap_leader('bw', '<Cmd>lua MiniBufremove.wipeout()<CR>',        'Wipeout')
 nmap_leader('bW', '<Cmd>lua MiniBufremove.wipeout(0, true)<CR>', 'Wipeout!')
 
+-- Whenever a 'Snacks.bufdelete*' call removes the last listed buffer showing
+-- in some window, it creates a new placeholder buffer (listed by default) to
+-- put there instead, since Neovim can't have zero buffers. That happens for
+-- any of 'bd'/'bo'/'bc' below (e.g. 'bd' on the last remaining buffer, or
+-- 'bo'/'bc' whenever they end up deleting everything) and left the
+-- placeholder behind as a ghost entry in the tabline. Wrap them to unlist any
+-- such newly-created nameless buffer afterward.
+local function bufdelete(fn)
+  return function()
+    local before = {}
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do before[buf] = true end
+    fn()
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+      if not before[buf] and vim.api.nvim_buf_get_name(buf) == '' then
+        vim.bo[buf].buflisted = false
+      end
+    end
+  end
+end
+
 -- From LazyVim config. Uses the 'folke/snacks.nvim' 'bufdelete' module, set up in
 -- 'plugin/40_plugins.lua'. Replaces 'MiniBufremove.delete()' for plain delete
 -- ('bD'/'bw'/'bW' - force delete / wipeout - stay on 'mini.bufremove').
-nmap_leader('bd', function() Snacks.bufdelete() end,       'Delete buffer')
-nmap_leader('bo', function() Snacks.bufdelete.other() end, 'Delete other buffers')
-
--- 'Snacks.bufdelete.all()' creates a new placeholder buffer (listed by default)
--- to replace the last deleted one in any window that showed it, since Neovim
--- can't have zero buffers. Unlist it afterward so it doesn't linger as a ghost
--- entry in the tabline.
-nmap_leader('bc', function()
-  local before = {}
-  for _, buf in ipairs(vim.api.nvim_list_bufs()) do before[buf] = true end
-  Snacks.bufdelete.all()
-  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-    if not before[buf] and vim.api.nvim_buf_get_name(buf) == '' then
-      vim.bo[buf].buflisted = false
-    end
-  end
-end, 'Delete all buffers')
+nmap_leader('bd', bufdelete(function() Snacks.bufdelete() end),       'Delete buffer')
+nmap_leader('bo', bufdelete(function() Snacks.bufdelete.other() end), 'Delete other buffers')
+nmap_leader('bc', bufdelete(function() Snacks.bufdelete.all() end),   'Delete all buffers')
 
 -- c is for 'Code'. Common usage:
 -- - `<Leader>ca` - pick a code action to apply at the cursor (or over a visual
