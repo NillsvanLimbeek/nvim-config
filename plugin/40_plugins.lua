@@ -459,10 +459,16 @@ now_if_args(function()
     filetypes = vim.tbl_filter(function(ft) return ft ~= 'markdown' end, vim.lsp.config.tailwindcss.filetypes),
   })
 
+  -- 'jsonls' (vscode-json-language-server). No custom settings needed - its
+  -- default config already covers 'json'/'jsonc' and advertises formatting
+  -- support ('init_options.provideFormatter'), which the "Formatting" section
+  -- below falls back to for JSON files in projects without a 'prettier'
+  -- config (`.prettierrc`, etc.) of their own.
+
   -- Use `:h vim.lsp.enable()` to automatically enable language server based on
   -- the rules provided by 'nvim-lspconfig'.
   -- Use `:h vim.lsp.config()` or 'after/lsp/' directory to configure servers.
-  vim.lsp.enable({ 'lua_ls', 'vtsls', 'vue_ls', 'eslint', 'tailwindcss' })
+  vim.lsp.enable({ 'lua_ls', 'vtsls', 'vue_ls', 'eslint', 'tailwindcss', 'jsonls' })
 end)
 
 -- Diagnostics =================================================================
