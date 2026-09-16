@@ -120,7 +120,21 @@ nmap_leader('bW', '<Cmd>lua MiniBufremove.wipeout(0, true)<CR>', 'Wipeout!')
 -- ('bD'/'bw'/'bW' - force delete / wipeout - stay on 'mini.bufremove').
 nmap_leader('bd', function() Snacks.bufdelete() end,       'Delete buffer')
 nmap_leader('bo', function() Snacks.bufdelete.other() end, 'Delete other buffers')
-nmap_leader('bc', function() Snacks.bufdelete.all() end,   'Delete all buffers')
+
+-- 'Snacks.bufdelete.all()' creates a new placeholder buffer (listed by default)
+-- to replace the last deleted one in any window that showed it, since Neovim
+-- can't have zero buffers. Unlist it afterward so it doesn't linger as a ghost
+-- entry in the tabline.
+nmap_leader('bc', function()
+  local before = {}
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do before[buf] = true end
+  Snacks.bufdelete.all()
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if not before[buf] and vim.api.nvim_buf_get_name(buf) == '' then
+      vim.bo[buf].buflisted = false
+    end
+  end
+end, 'Delete all buffers')
 
 -- c is for 'Code'. Common usage:
 -- - `<Leader>ca` - pick a code action to apply at the cursor (or over a visual
