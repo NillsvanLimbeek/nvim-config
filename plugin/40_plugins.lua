@@ -694,6 +694,31 @@ Snacks.util.lsp.on({ name = 'vtsls' }, function(_, client)
   end
 end)
 
+-- Yank history ================================================================
+
+-- Keeps a history of yanks/deletes (independent of - and synced with - the
+-- numbered registers) and lets you cycle through it while pasting or browse it
+-- in a picker. Ported from LazyVim's 'yanky.nvim' extra.
+--
+-- Example usage:
+-- - `yiw` then `p` then `<C-p>`/`<C-n>` - paste, then cycle to an older/newer
+--   entry without leaving the pasted text in place
+-- - `<Leader>sy` - browse the full history in a 'snacks.nvim' picker (it
+--   self-registers as a picker source once it detects 'snacks.nvim')
+later(function()
+  add('gbprod/yanky.nvim')
+  require('yanky').setup()
+
+  -- No default mappings are created by 'yanky.nvim' itself.
+  vim.keymap.set({ 'n', 'x' }, 'p', '<Plug>(YankyPutAfter)', { desc = 'Paste after' })
+  vim.keymap.set({ 'n', 'x' }, 'P', '<Plug>(YankyPutBefore)', { desc = 'Paste before' })
+  vim.keymap.set({ 'n', 'x' }, 'gp', '<Plug>(YankyGPutAfter)', { desc = 'Paste after (leave cursor after)' })
+  vim.keymap.set({ 'n', 'x' }, 'gP', '<Plug>(YankyGPutBefore)', { desc = 'Paste before (leave cursor after)' })
+
+  vim.keymap.set('n', '<C-p>', '<Plug>(YankyPreviousEntry)', { desc = 'Previous yank history entry' })
+  vim.keymap.set('n', '<C-n>', '<Plug>(YankyNextEntry)', { desc = 'Next yank history entry' })
+end)
+
 -- Command line UI =============================================================
 
 -- 'folke/noice.nvim' can move the command line (and its completion popup menu)

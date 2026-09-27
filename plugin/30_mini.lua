@@ -46,7 +46,10 @@ local now_if_args = Config.now_if_args
 -- Common configuration presets. Example usage:
 -- - `<C-s>` in Insert mode - save and go to Normal mode
 -- - `go` / `gO` - insert empty line before/after in Normal mode
--- - `gy` / `gp` - copy / paste from system clipboard
+-- - `gy` / `gp` - copy / paste from system clipboard (both later overridden -
+--   'gy' in 'plugin/40_plugins.lua' for LSP goto type definition, 'gp' for
+--   'yanky.nvim' - redundant since 'clipboard=unnamedplus' in
+--   'plugin/10_options.lua' already syncs the unnamed register)
 -- - `\` + key - toggle common options. Like `\h` toggles highlighting search.
 -- - `<C-hjkl>` (four combos) - navigate between windows.
 -- - `<M-hjkl>` in Insert/Command mode - navigate in that mode.

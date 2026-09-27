@@ -297,6 +297,9 @@ nmap_leader('ss', function() Snacks.picker.lsp_symbols() end,          'LSP symb
 nmap_leader('sS', function() Snacks.picker.lsp_workspace_symbols() end,'LSP workspace symbols')
 nmap_leader('su', function() Snacks.picker.undo() end,                 'Undo history')
 nmap_leader('sw', function() Snacks.picker.grep_word() end,            'Word/selection')
+-- 'gbprod/yanky.nvim' (set up in 'plugin/40_plugins.lua') self-registers this
+-- picker source once it detects 'snacks.nvim' during its own setup.
+nmap_leader('sy', function() Snacks.picker.yanky() end,                'Yank history')
 
 xmap_leader('sw', function() Snacks.picker.grep_word() end, 'Word/selection')
 
