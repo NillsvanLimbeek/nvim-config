@@ -459,6 +459,10 @@ now_if_args(function()
     filetypes = vim.tbl_filter(function(ft) return ft ~= 'markdown' end, vim.lsp.config.tailwindcss.filetypes),
   })
 
+  -- Color swatches for Tailwind classes (e.g. 'bg-red-500'), fed by the
+  -- tailwindcss LSP's document colors. Needs Neovim 0.12+; skipped on older.
+  if vim.lsp.document_color then vim.lsp.document_color.enable(true, nil, { style = 'background' }) end
+
   -- 'jsonls' (vscode-json-language-server). No custom settings needed - its
   -- default config already covers 'json'/'jsonc' and advertises formatting
   -- support ('init_options.provideFormatter'), which the "Formatting" section
