@@ -292,6 +292,7 @@ nmap_leader('sl', function() Snacks.picker.loclist() end,              'Location
 nmap_leader('sm', function() Snacks.picker.marks() end,                'Marks')
 nmap_leader('sM', function() Snacks.picker.man() end,                  'Man pages')
 nmap_leader('sq', function() Snacks.picker.qflist() end,               'Quickfix list')
+nmap_leader('sr', function() Config.replace_word() end,                'Replace word (buffer)')
 nmap_leader('sR', function() Snacks.picker.resume() end,               'Resume')
 nmap_leader('ss', function() Snacks.picker.lsp_symbols() end,          'LSP symbols')
 nmap_leader('sS', function() Snacks.picker.lsp_workspace_symbols() end,'LSP workspace symbols')
@@ -302,6 +303,49 @@ nmap_leader('sw', function() Snacks.picker.grep_word() end,            'Word/sel
 nmap_leader('sy', function() Snacks.picker.yanky() end,                'Yank history')
 
 xmap_leader('sw', function() Snacks.picker.grep_word() end, 'Word/selection')
+
+-- Replace word in current buffer, using floating `vim.ui.input()` prompts
+-- (provided by the 'snacks.nvim' `input` module). Defaults to the word under
+-- the cursor; the substitution asks for confirmation on each match. Matches of
+-- the text (substrings included, not only whole words) are highlighted in the
+-- buffer while typing (like 'inccommand'), and exactly those get replaced.
+Config.replace_word = function()
+  local win = vim.api.nvim_get_current_win()
+  local match_id
+  local clear = function()
+    if match_id then pcall(vim.fn.matchdelete, match_id, win) end
+    match_id = nil
+  end
+  local highlight = function(text)
+    clear()
+    if text == '' or not vim.api.nvim_win_is_valid(win) then return end
+    local pat = [[\V]] .. vim.fn.escape(text, [[\]])
+    match_id = vim.fn.matchadd('IncSearch', pat, 10, -1, { window = win })
+    vim.cmd('redraw')
+  end
+
+  local cword = vim.fn.expand('<cword>')
+  vim.ui.input({ prompt = 'Replace', default = cword }, function(from)
+    if not from or from == '' then return clear() end
+    highlight(from)
+    vim.ui.input({ prompt = ('Replace "%s" with'):format(from) }, function(to)
+      clear()
+      if to == nil then return end
+      local pat = vim.fn.escape(from, [[/\]])
+      local rep = vim.fn.escape(to, [[/\&]])
+      vim.cmd(('%%s/\\V%s/%s/gc'):format(pat, rep))
+    end)
+  end)
+
+  -- The input window is opened (and focused) synchronously by the call above
+  local buf = vim.api.nvim_get_current_buf()
+  if vim.bo[buf].filetype ~= 'snacks_input' then return end
+  highlight(cword)
+  vim.api.nvim_create_autocmd({ 'TextChanged', 'TextChangedI' }, {
+    buffer = buf,
+    callback = function() highlight(vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1] or '') end,
+  })
+end
 
 -- t is for 'Tab'. Ported from LazyVim config.
 --

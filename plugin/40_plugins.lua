@@ -551,6 +551,7 @@ now(function()
         { section = 'header' },
       },
     },
+    input = {},
     lazygit = {},
     scroll = {},
     statuscolumn = {},

@@ -554,7 +554,11 @@ later(function() require('mini.indentscope').setup({ symbol = '│' }) end)
 -- - `:h MiniInput.gen_view` - bundled view customizations (adjust how floating
 --   window is shown or use statusline/tabline/winbar/virtual text)
 -- - `:h MiniInput-lifecycle` - details about how a custom mode emulation works
-later(function() require('mini.input').setup() end)
+--
+-- Disabled: 'folke/snacks.nvim' `input` module (see 'plugin/40_plugins.lua')
+-- replaces `vim.ui.input()` with a floating prompt centered in the editor.
+-- Whichever sets up last wins, and this loads later, so it would override it.
+-- later(function() require('mini.input').setup() end)
 
 -- Jump to next/previous single character. It implements "smarter `fFtT` keys"
 -- (see `:h f`) that work across multiple lines, start "jumping mode", and
