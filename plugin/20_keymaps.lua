@@ -176,6 +176,8 @@ nmap_leader(',',       function() Snacks.picker.buffers() end,         'Buffers'
 nmap_leader('/',       function() Snacks.picker.grep() end,            'Grep')
 nmap_leader(':',       function() Snacks.picker.command_history() end, 'Command history')
 nmap_leader('e',       function() Snacks.explorer() end,               'Explorer')
+nmap_leader('.',       function() Snacks.scratch({ ft = 'markdown' }) end, 'Toggle scratch (todo)')
+nmap_leader('S',       function() Snacks.scratch.select() end,         'Select scratch')
 
 -- f is for 'Fuzzy Find'. Common usage:
 -- - `<Leader>ff` - find files; for best performance requires `ripgrep`

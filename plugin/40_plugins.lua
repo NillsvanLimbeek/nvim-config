@@ -510,6 +510,8 @@ end)
 -- - `statuscolumn` - custom statuscolumn combining line numbers, signs (e.g. from
 --   'mini.diff'), and folds. Replaces the plain 'number'/'signcolumn' rendering
 --   from 'plugin/10_options.lua'.
+-- - `scratch` - persistent floating markdown scratch file (per cwd + git
+--   branch), used as a todo/checkbox list. Used by '<Leader>.' / '<Leader>S'.
 -- - `picker`/`explorer` - fuzzy finder and file-tree sidebar. Replaces
 --   'mini.pick' (disabled in 'plugin/30_mini.lua'; 'mini.files' stays, bound to
 --   '-' and '<Leader>ef' in 'plugin/20_keymaps.lua'). Also takes over
@@ -560,6 +562,20 @@ now(function()
     scroll = {},
     statuscolumn = {},
     explorer = {},
+    scratch = {
+      win = {
+        -- Snacks creates and swaps windows while opening the float, so the
+        -- 'BufWinEnter' render of 'render-markdown.nvim' is lost and nothing is
+        -- rendered until the first cursor/text event. Force a render once the
+        -- window has settled (50ms was too early on the first open).
+        on_win = function(self)
+          vim.defer_fn(function()
+            if not vim.api.nvim_buf_is_valid(self.buf) then return end
+            require('render-markdown.api').render({ buf = self.buf })
+          end, 250)
+        end,
+      },
+    },
     picker = {
       sources = {
         explorer = {
@@ -862,7 +878,10 @@ end)
 -- code block language icons.
 later(function()
   add('MeanderingProgrammer/render-markdown.nvim')
-  require('render-markdown').setup()
+  require('render-markdown').setup({
+    -- Strike through the text of completed (`- [x]`) todo items.
+    checkbox = { checked = { scope_highlight = '@markup.strikethrough' } },
+  })
 end)
 
 -- Toggle rendering for the current buffer with '<Leader>um' - useful when
