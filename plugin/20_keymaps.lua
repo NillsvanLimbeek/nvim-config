@@ -198,6 +198,7 @@ nmap_leader('fr', function() Snacks.picker.recent() end,                        
 -- - `<Leader>go` - toggle 'mini.diff' overlay to show in-buffer unstaged changes
 -- - `<Leader>gd` - Git diff (hunks) picker
 -- - `<Leader>gg` - open 'lazygit'
+-- - `<Leader>gv` / `gV` / `gx` - 'diffview-plus.nvim' open / file history / close
 --
 -- Git pickers ('gb'/'gd'/'gf'/'gl'/'gL'/'gs'/'gS') use 'folke/snacks.nvim',
 -- set up in 'plugin/40_plugins.lua', matching its README default keymaps.
@@ -224,6 +225,9 @@ nmap_leader('gL', function() Snacks.picker.git_log_line() end,  'Log line')
 nmap_leader('go', '<Cmd>lua MiniDiff.toggle_overlay()<CR>',     'Toggle overlay')
 nmap_leader('gs', function() Snacks.picker.git_status() end,    'Status')
 nmap_leader('gS', function() Snacks.picker.git_stash() end,     'Stash')
+nmap_leader('gv', '<Cmd>DiffviewOpen<CR>',                      'Diffview open')
+nmap_leader('gV', '<Cmd>DiffviewFileHistory %<CR>',             'Diffview file history')
+nmap_leader('gx', '<Cmd>DiffviewClose<CR>',                     'Diffview close')
 nmap_leader('gw', '<Cmd>Git diff<CR>',                          'Working diff')
 nmap_leader('gW', '<Cmd>Git diff -- %<CR>',                     'Working diff buffer')
 

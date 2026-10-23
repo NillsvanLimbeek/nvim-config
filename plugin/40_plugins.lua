@@ -19,6 +19,7 @@ local now_if_args = Config.now_if_args
 -- 'plugin/30_mini.lua'.
 now(function()
   add('catppuccin/nvim')
+  local darken = require('catppuccin.utils.colors').darken
   require('catppuccin').setup({
     flavour = 'mocha',
     transparent_background = true,
@@ -34,6 +35,13 @@ now(function()
         PmenuSel = { bg = colors.surface1, style = { 'bold' } },
         PmenuKindSel = { bg = colors.surface1, fg = colors.blue, style = { 'bold' } },
         PmenuExtraSel = { bg = colors.surface1, fg = colors.overlay0, style = { 'bold' } },
+        -- Muted solid backgrounds for diff views ('diffview-plus.nvim', see
+        -- below): dark red deletions, dark green additions, dark blue changes
+        -- with a brighter blue for the changed text, and faint filler hatching.
+        DiffAdd = { bg = darken(colors.green, 0.18, colors.base) },
+        DiffDelete = { fg = colors.surface1, bg = darken(colors.red, 0.18, colors.base) },
+        DiffChange = { bg = darken(colors.blue, 0.15, colors.base) },
+        DiffText = { bg = darken(colors.blue, 0.35, colors.base) },
         -- With 'transparent_background = true', Pmenu's background would
         -- otherwise be see-through - force it solid so the completion popup
         -- (which now has a border) doesn't look like a hole in the editor.
@@ -917,6 +925,28 @@ later(function() add('rafamadriz/friendly-snippets') end)
 now_if_args(function()
   add('mason-org/mason.nvim')
   require('mason').setup()
+end)
+
+-- Git diff/merge UI ===========================================================
+
+-- 'dlyongemallo/diffview-plus.nvim' (maintained fork of 'sindrets/diffview.nvim')
+-- provides a single-tabpage UI to browse diffs for any git rev, file history,
+-- and a merge tool for conflicts. Still loaded as `require('diffview')`.
+-- Commands are used lazily via the '<Leader>g' mappings in 'plugin/20_keymaps.lua'.
+-- Press `g?` inside a diffview buffer to list its keymaps.
+later(function()
+  add('dlyongemallo/diffview-plus.nvim')
+  require('diffview').setup({
+    -- Highlight changed text within a line (needs the 'DiffText' tweaks above)
+    enhanced_diff_hl = true,
+    use_icons = true,
+    -- Flat list with dimmed directory names, like the README screenshot
+    file_panel = { listing_style = 'list' },
+    hooks = {
+      -- Filler lines drawn as diagonal hatching instead of dashes
+      diff_buf_win_enter = function() vim.opt_local.fillchars:append({ diff = '╱' }) end,
+    },
+  })
 end)
 
 -- Honorable mentions =========================================================
