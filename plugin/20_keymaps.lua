@@ -175,7 +175,11 @@ nmap_leader('<Space>', function() Snacks.picker.files() end,           'Smart fi
 nmap_leader(',',       function() Snacks.picker.buffers() end,         'Buffers')
 nmap_leader('/',       function() Snacks.picker.grep() end,            'Grep')
 nmap_leader(':',       function() Snacks.picker.command_history() end, 'Command history')
-nmap_leader('e',       function() Snacks.explorer() end,               'Explorer')
+nmap_leader('e',       function()
+  -- Swap the git status sidebar (see `<Leader>gt`) for the explorer
+  for _, picker in ipairs(Snacks.picker.get({ source = 'git_status' })) do picker:close() end
+  Snacks.explorer()
+end, 'Explorer')
 nmap_leader('.',       function() Snacks.scratch({ ft = 'markdown' }) end, 'Toggle scratch (todo)')
 nmap_leader('S',       function() Snacks.scratch.select() end,         'Select scratch')
 
@@ -198,7 +202,7 @@ nmap_leader('fr', function() Snacks.picker.recent() end,                        
 -- - `<Leader>go` - toggle 'mini.diff' overlay to show in-buffer unstaged changes
 -- - `<Leader>gd` - Git diff (hunks) picker
 -- - `<Leader>gg` - open 'lazygit'
--- - `<Leader>gv` / `gV` / `gx` - 'diffview-plus.nvim' open / file history / close
+-- - `<Leader>gt` - changed files in sidebar (replaces the explorer if open)
 --
 -- Git pickers ('gb'/'gd'/'gf'/'gl'/'gL'/'gs'/'gS') use 'folke/snacks.nvim',
 -- set up in 'plugin/40_plugins.lua', matching its README default keymaps.
@@ -225,9 +229,19 @@ nmap_leader('gL', function() Snacks.picker.git_log_line() end,  'Log line')
 nmap_leader('go', '<Cmd>lua MiniDiff.toggle_overlay()<CR>',     'Toggle overlay')
 nmap_leader('gs', function() Snacks.picker.git_status() end,    'Status')
 nmap_leader('gS', function() Snacks.picker.git_stash() end,     'Stash')
-nmap_leader('gv', '<Cmd>DiffviewOpen<CR>',                      'Diffview open')
-nmap_leader('gV', '<Cmd>DiffviewFileHistory %<CR>',             'Diffview file history')
-nmap_leader('gx', '<Cmd>DiffviewClose<CR>',                     'Diffview close')
+nmap_leader('gt', function()
+  -- Swap the explorer sidebar for a changed-files sidebar
+  for _, picker in ipairs(Snacks.picker.get({ source = 'explorer' })) do picker:close() end
+  Snacks.picker.git_status({
+    -- Same side as the explorer (see 'plugin/40_plugins.lua')
+    layout = { preset = 'sidebar', preview = false, layout = { position = 'right' } },
+    -- Keep the sidebar open after selecting a file, like the explorer
+    auto_close = false,
+    jump = { close = false },
+    -- Start in the list, not the search input
+    focus = 'list',
+  })
+end, 'Status (sidebar)')
 nmap_leader('gw', '<Cmd>Git diff<CR>',                          'Working diff')
 nmap_leader('gW', '<Cmd>Git diff -- %<CR>',                     'Working diff buffer')
 
